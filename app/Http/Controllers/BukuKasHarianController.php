@@ -115,4 +115,37 @@ class BukuKasHarianController extends Controller
 
         return redirect()->route('buku-kas-harian.index')->with('success', 'Buku kas harian berhasil ditutup dan disimpan dengan aman.');
     }
+
+    /**
+     * Update data tutup buku kasir (hanya admin)
+     * Hanya bisa mengubah actual_cash dan notes; discrepancy dihitung ulang.
+     */
+    public function update(Request $request, BukuKasHarian $bukuKasHarian)
+    {
+        // Bersihkan tanda titik ribuan dari input uang aktual
+        $request->merge([
+            'actual_cash' => str_replace('.', '', $request->actual_cash),
+        ]);
+
+        $request->validate([
+            'actual_cash' => 'required|numeric|min:0',
+            'notes'       => 'nullable|string|max:1000',
+        ]);
+
+        // Hitung ulang expected_cash dari data sistem yang sudah tersimpan
+        $expectedCash = $bukuKasHarian->starting_cash
+            + $bukuKasHarian->system_cash_sales
+            - $bukuKasHarian->system_expenses;
+
+        // Hitung ulang selisih berdasarkan uang aktual baru
+        $discrepancy = $request->actual_cash - $expectedCash;
+
+        $bukuKasHarian->update([
+            'actual_cash'  => $request->actual_cash,
+            'discrepancy'  => $discrepancy,
+            'notes'        => $request->notes,
+        ]);
+
+        return redirect()->route('buku-kas-harian.index')->with('success', 'Data buku kas harian berhasil diperbarui.');
+    }
 }

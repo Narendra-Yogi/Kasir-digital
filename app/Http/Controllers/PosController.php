@@ -8,17 +8,21 @@ use App\Models\Order;
 use App\Models\OrderDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class PosController extends Controller
 {
     public function index()
     {
-        $categories = Category::with(['items' => function($query) {
-            $query->where('is_available', true);
-        }])->whereHas('items', function($query) {
-            $query->where('is_available', true);
-        })->get();
+        // Cache query kategori selama 5 menit untuk kurangi latency ke database remote
+        $categories = Cache::remember('pos_categories', 300, function () {
+            return Category::with(['items' => function($query) {
+                $query->where('is_available', true);
+            }])->whereHas('items', function($query) {
+                $query->where('is_available', true);
+            })->get();
+        });
 
         return view('pos.index', compact('categories'));
     }
@@ -38,15 +42,25 @@ class PosController extends Controller
         DB::beginTransaction();
 
         try {
+            // Ambil semua item sekaligus dengan 1 query (hindari N+1 query)
+            $cartItemIds = collect($request->cart)->pluck('item_id')->toArray();
+            $items = Item::whereIn('id', $cartItemIds)->get()->keyBy('id');
+
             $totalAmount = 0;
-            
-            foreach ($request->cart as $cartItem) {
-                $item = Item::find($cartItem['item_id']);
+            $cartData = collect($request->cart);
+
+            // Validasi stok semua item sekaligus
+            foreach ($cartData as $cartItem) {
+                $item = $items->get($cartItem['item_id']);
+                if (!$item) {
+                    throw new \Exception("Item tidak ditemukan.");
+                }
                 if ($item->stock < $cartItem['quantity']) {
                     throw new \Exception("Stok untuk menu '{$item->name}' tidak mencukupi! (Tersedia: {$item->stock})");
                 }
                 $totalAmount += ($item->price * $cartItem['quantity']);
             }
+
             $change = $request->cash_received - $totalAmount;
 
             if ($change < 0 && $request->payment_method === 'cash') {
@@ -64,17 +78,21 @@ class PosController extends Controller
                 'status' => 'success',
             ]);
 
-            foreach ($request->cart as $cartItem) {
-                $item = Item::find($cartItem['item_id']);
+            // Buat OrderDetail dan update stok menggunakan data item yang sudah di-load
+            $orderDetails = [];
+            foreach ($cartData as $cartItem) {
+                $item = $items->get($cartItem['item_id']);
 
-                OrderDetail::create([
+                $orderDetails[] = [
                     'order_id' => $order->id,
                     'item_id' => $item->id,
                     'quantity' => $cartItem['quantity'],
                     'price' => $item->price,
                     'subtotal' => $item->price * $cartItem['quantity'],
                     'notes' => $cartItem['notes'] ?? null,
-                ]); 
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
 
                 if ($item->stock >= $cartItem['quantity']) {
                     $item->decrement('stock', $cartItem['quantity']);
@@ -82,6 +100,9 @@ class PosController extends Controller
                     $item->update(['stock' => 0]);
                 }
             }
+
+            // Insert semua OrderDetail sekaligus dengan 1 query
+            OrderDetail::insert($orderDetails);
 
             DB::commit();
             return redirect()->route('pos.index')->with([

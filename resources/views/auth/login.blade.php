@@ -5,34 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Geprek Legend</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif']
-                    },
-                    colors: {
-                        brand: {
-                            50: '#fff7ed',
-                            100: '#ffedd5',
-                            200: '#fed7aa',
-                            300: '#fdba74',
-                            400: '#fb923c',
-                            500: '#f97316',
-                            600: '#ea580c',
-                            700: '#c2410c',
-                            800: '#9a3412',
-                            900: '#7c2d12'
-                        },
-                        surface: '#f8fafc',
-                    }
-                }
-            }
-        }
-    </script>
 </head>
 
 <body class="bg-surface font-sans text-gray-800 h-screen flex items-center justify-center">

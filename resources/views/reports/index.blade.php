@@ -37,22 +37,49 @@
     <div class="bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm">
         <form action="{{ route('reports.index') }}" method="GET" class="flex flex-col gap-4">
             {{-- Quick Date Presets --}}
+            @php
+                $isBulanLalu = $tanggalMulai->isSameDay(now()->subMonth()->startOfMonth()) && $tanggalSelesai->isSameDay(now()->subMonth()->endOfMonth());
+            @endphp
             <div class="flex flex-wrap gap-2">
                 <span class="text-[10px] font-bold text-gray-400 uppercase self-center mr-1">Cepat:</span>
-                <a href="{{ route('reports.index', ['start_date' => now()->format('Y-m-d'), 'end_date' => now()->format('Y-m-d')]) }}" 
-                   class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {{ $tanggalMulai->isToday() && $tanggalSelesai->isToday() ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30' : 'bg-gray-100 text-gray-600 hover:bg-brand-50 hover:text-brand-600' }}">
+
+                {{-- Hari Ini --}}
+                <a href="{{ route('reports.index', ['start_date' => now()->format('Y-m-d'), 'end_date' => now()->format('Y-m-d')]) }}"
+                   @if($tanggalMulai->format('Y-m-d') === now()->format('Y-m-d') && $tanggalSelesai->format('Y-m-d') === now()->format('Y-m-d'))
+                       class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-brand-600 text-white shadow-md"
+                   @else
+                       class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-gray-100 text-gray-600 hover:bg-brand-50 hover:text-brand-600"
+                   @endif>
                     Hari Ini
                 </a>
-                <a href="{{ route('reports.index', ['start_date' => now()->subDays(6)->format('Y-m-d'), 'end_date' => now()->format('Y-m-d')]) }}" 
-                   class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {{ $tanggalMulai->diffInDays($tanggalSelesai) == 6 && $tanggalSelesai->isToday() ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30' : 'bg-gray-100 text-gray-600 hover:bg-brand-50 hover:text-brand-600' }}">
+
+                {{-- 7 Hari --}}
+                <a href="{{ route('reports.index', ['start_date' => now()->subDays(6)->format('Y-m-d'), 'end_date' => now()->format('Y-m-d')]) }}"
+                   @if($tanggalMulai->format('Y-m-d') === now()->subDays(6)->format('Y-m-d') && $tanggalSelesai->format('Y-m-d') === now()->format('Y-m-d'))
+                       class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-brand-600 text-white shadow-md"
+                   @else
+                       class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-gray-100 text-gray-600 hover:bg-brand-50 hover:text-brand-600"
+                   @endif>
                     7 Hari
                 </a>
-                <a href="{{ route('reports.index', ['start_date' => now()->startOfMonth()->format('Y-m-d'), 'end_date' => now()->format('Y-m-d')]) }}" 
-                   class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {{ $tanggalMulai->isSameDay(now()->startOfMonth()) && $tanggalSelesai->isToday() ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30' : 'bg-gray-100 text-gray-600 hover:bg-brand-50 hover:text-brand-600' }}">
+
+                {{-- Bulan Ini --}}
+                <a href="{{ route('reports.index', ['start_date' => now()->startOfMonth()->format('Y-m-d'), 'end_date' => now()->format('Y-m-d')]) }}"
+                   @if($tanggalMulai->format('Y-m-d') === now()->startOfMonth()->format('Y-m-d') && $tanggalSelesai->format('Y-m-d') === now()->format('Y-m-d'))
+                       class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-brand-600 text-white shadow-md"
+                   @else
+                       class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-gray-100 text-gray-600 hover:bg-brand-50 hover:text-brand-600"
+                   @endif>
                     Bulan Ini
                 </a>
-                <a href="{{ route('reports.index', ['start_date' => now()->subMonth()->startOfMonth()->format('Y-m-d'), 'end_date' => now()->subMonth()->endOfMonth()->format('Y-m-d')]) }}" 
-                   class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-gray-100 text-gray-600 hover:bg-brand-50 hover:text-brand-600">
+
+                {{-- Bulan Lalu --}}
+                <a href="{{ route('reports.index', ['start_date' => now()->subMonth()->startOfMonth()->format('Y-m-d'), 'end_date' => now()->subMonth()->endOfMonth()->format('Y-m-d')]) }}"
+                   @if($tanggalMulai->format('Y-m-d') === now()->subMonth()->startOfMonth()->format('Y-m-d') && $tanggalSelesai->format('Y-m-d') === now()->subMonth()->endOfMonth()->format('Y-m-d'))
+                       class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-brand-600 text-white shadow-md"
+                   @else
+                       class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-gray-100 text-gray-600 hover:bg-brand-50 hover:text-brand-600"
+                   @endif>
                     Bulan Lalu
                 </a>
             </div>

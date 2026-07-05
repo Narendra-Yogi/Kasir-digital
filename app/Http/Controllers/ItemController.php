@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Item;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class ItemController extends Controller
@@ -58,6 +59,7 @@ class ItemController extends Controller
             'created_by'   => $request->user()->id,
         ]);
 
+        Cache::forget('pos_categories'); // Invalidasi cache POS
         return redirect()->route('items.index')->with('success', 'Menu baru berhasil ditambahkan.');
     }
 
@@ -107,13 +109,15 @@ class ItemController extends Controller
             'updated_by'   => $request->user()->id,
         ]);
 
+        Cache::forget('pos_categories'); // Invalidasi cache POS
         return redirect()->route('items.index')->with('success', 'Menu berhasil diperbarui.');
     }
 
     public function destroy(Item $item)
     {
         // Melakukan penghapusan secara Soft Delete
-        $item->delete(); 
+        $item->delete();
+        Cache::forget('pos_categories'); // Invalidasi cache POS
         return redirect()->route('items.index')->with('success', 'Menu berhasil dihapus.');
     }
 }

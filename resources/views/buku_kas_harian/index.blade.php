@@ -43,6 +43,12 @@
                         <span class="text-base font-black text-red-600">-Rp {{ number_format(abs($alreadyClosed->discrepancy), 0, ',', '.') }}</span>
                     @endif
                 </div>
+                @if(auth()->user()->role === 'admin')
+                <button onclick="openEditModal()" class="flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm transition-colors shadow-md shadow-brand-600/20 shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    Edit
+                </button>
+                @endif
             </div>
         </div>
     @else
@@ -140,6 +146,81 @@
             </div>
             
         </div>
+    @endif
+
+    {{-- ===== MODAL EDIT (HANYA ADMIN) ===== --}}
+    @if($alreadyClosed && auth()->user()->role === 'admin')
+    <div id="edit-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+        {{-- Backdrop --}}
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeEditModal()"></div>
+        
+        {{-- Modal Card --}}
+        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg p-8 space-y-6 scale-95 transition-transform duration-200" id="edit-modal-card">
+            
+            {{-- Header --}}
+            <div class="flex items-start justify-between">
+                <div>
+                    <h3 class="text-lg font-black text-gray-900">Edit Buku Kas Harian</h3>
+                    <p class="text-xs text-gray-400 mt-1">Tanggal: {{ \Carbon\Carbon::parse($alreadyClosed->date)->translatedFormat('d F Y') }}</p>
+                </div>
+                <button onclick="closeEditModal()" class="p-2 rounded-xl hover:bg-gray-100 text-gray-400 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            {{-- Ringkasan Data Sistem (readonly) --}}
+            <div class="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-2 text-xs">
+                <p class="font-bold text-gray-400 uppercase tracking-wider mb-2">Data Sistem (Tidak Bisa Diubah)</p>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Modal Awal</span>
+                    <span class="font-bold text-gray-800">Rp {{ number_format($alreadyClosed->starting_cash, 0, ',', '.') }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Penjualan Tunai</span>
+                    <span class="font-bold text-gray-800">Rp {{ number_format($alreadyClosed->system_cash_sales, 0, ',', '.') }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Pengeluaran</span>
+                    <span class="font-bold text-red-500">-Rp {{ number_format($alreadyClosed->system_expenses, 0, ',', '.') }}</span>
+                </div>
+                <div class="flex justify-between border-t border-gray-200 pt-2">
+                    <span class="text-gray-500 font-semibold">Estimasi Kas Sistem</span>
+                    <span class="font-black text-gray-900">Rp {{ number_format($alreadyClosed->starting_cash + $alreadyClosed->system_cash_sales - $alreadyClosed->system_expenses, 0, ',', '.') }}</span>
+                </div>
+            </div>
+
+            {{-- Form Edit --}}
+            <form action="{{ route('buku-kas-harian.update', $alreadyClosed->id) }}" method="POST" id="edit-kas-form">
+                @csrf
+                @method('PUT')
+                <div class="space-y-5">
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Uang Fisik Laci (Rupiah)</label>
+                        <input type="text" name="actual_cash" id="edit-actual-cash"
+                            value="{{ number_format($alreadyClosed->actual_cash, 0, ',', '.') }}"
+                            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-brand-500 transition-colors font-bold text-gray-900 text-sm"
+                            oninput="formatThousandsInput(this); updateEditDiscrepancy()" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Catatan</label>
+                        <textarea name="notes" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-brand-500 transition-colors text-sm text-gray-800">{{ $alreadyClosed->notes }}</textarea>
+                    </div>
+
+                    {{-- Preview Selisih Baru --}}
+                    <div class="p-3 rounded-xl bg-gray-50 border border-gray-100 flex justify-between items-center">
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Preview Selisih Baru</span>
+                        <span class="text-sm font-black" id="edit-discrepancy-display">Rp 0 (Cocok)</span>
+                    </div>
+
+                    <button type="submit" class="w-full bg-brand-700 hover:bg-brand-800 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-brand-700/20 transition-all cursor-pointer text-sm">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
     @endif
     
     {{-- ========== BAGIAN BAWAH: TABEL RIWAYAT TUTUP BUKU ========== --}}
@@ -254,6 +335,55 @@
         if (document.getElementById('closing-form')) {
             calculateClosingLive();
         }
+        // Inisialisasi preview selisih di modal edit
+        if (document.getElementById('edit-actual-cash')) {
+            updateEditDiscrepancy();
+        }
     });
+
+    // ---- FUNGSI MODAL EDIT ----
+    function openEditModal() {
+        const modal = document.getElementById('edit-modal');
+        const card  = document.getElementById('edit-modal-card');
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.classList.add('opacity-100');
+        card.classList.remove('scale-95');
+        card.classList.add('scale-100');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeEditModal() {
+        const modal = document.getElementById('edit-modal');
+        const card  = document.getElementById('edit-modal-card');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        modal.classList.remove('opacity-100');
+        card.classList.add('scale-95');
+        card.classList.remove('scale-100');
+        document.body.style.overflow = '';
+    }
+
+    // Kalkulasi live selisih di modal edit
+    function updateEditDiscrepancy() {
+        const expectedCash = {{ $alreadyClosed ? ($alreadyClosed->starting_cash + $alreadyClosed->system_cash_sales - $alreadyClosed->system_expenses) : 0 }};
+        const inputEl = document.getElementById('edit-actual-cash');
+        if (!inputEl) return;
+
+        const actualVal = parseFloat(inputEl.value.replace(/\D/g, '')) || 0;
+        const discrepancy = actualVal - expectedCash;
+
+        const displayEl = document.getElementById('edit-discrepancy-display');
+        if (!displayEl) return;
+
+        if (discrepancy === 0) {
+            displayEl.innerText = 'Rp 0 (Cocok)';
+            displayEl.className = 'text-sm font-black text-emerald-600';
+        } else if (discrepancy > 0) {
+            displayEl.innerText = '+ ' + formatRupiahJS(discrepancy) + ' (Surplus)';
+            displayEl.className = 'text-sm font-black text-amber-600';
+        } else {
+            displayEl.innerText = '- ' + formatRupiahJS(Math.abs(discrepancy)) + ' (Defisit)';
+            displayEl.className = 'text-sm font-black text-red-600';
+        }
+    }
 </script>
 @endsection

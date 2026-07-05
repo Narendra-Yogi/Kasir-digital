@@ -32,7 +32,7 @@
                 <h1 class="text-sm font-extrabold tracking-tight text-gray-900 leading-none">Geprek Legend</h1>
                 <span class="text-[9px] text-brand-600 mt-1 font-semibold uppercase tracking-wider">Kasir Digital</span>
             </div>
-            <button onclick="toggleSidebar()" class="lg:hidden absolute top-6 right-[-42px] p-1.5 rounded-lg bg-white border border-gray-100 shadow-md text-gray-500 z-50">
+            <button onclick="toggleSidebar()" class="lg:hidden absolute top-1/2 -translate-y-1/2 right-3 p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-500 transition-colors z-50">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         </div>

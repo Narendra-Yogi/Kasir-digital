@@ -34,6 +34,7 @@ Route::middleware(['auth'])->group(function () {
 
     // --- KHUSUS ADMIN ---
     Route::middleware(['role:admin'])->group(function () {
+        Route::put('/buku-kas-harian/{bukuKasHarian}', [BukuKasHarianController::class, 'update'])->name('buku-kas-harian.update');
         Route::resource('users', UserController::class);
         Route::resource('categories', CategoryController::class);
         Route::resource('items', ItemController::class);

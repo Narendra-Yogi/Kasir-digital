@@ -37,21 +37,17 @@
     <div class="bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up stagger-2">
         <p class="text-[10px] lg:text-xs font-bold text-red-400 uppercase tracking-wider mb-1 lg:mb-2">Pengeluaran Hari Ini</p>
         <h3 class="text-lg lg:text-2xl font-bold text-red-600">Rp {{ number_format($totalPengeluaranHariIni, 0, ',', '.') }}</h3>
-        <p class="text-[10px] lg:text-xs text-gray-400 mt-2 lg:mt-4 italic">
-            Laba: <span class="font-bold {{ ($totalPendapatanHariIni - $totalPengeluaranHariIni) >= 0 ? 'text-green-600' : 'text-red-600' }}">
-                Rp {{ number_format($totalPendapatanHariIni - $totalPengeluaranHariIni, 0, ',', '.') }}
-            </span>
-        </p>
+        <p class="text-[10px] lg:text-xs text-gray-400 mt-2 lg:mt-4 italic">Total biaya operasional</p>
     </div>
 
-    {{-- Status --}}
-    <div class="bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up stagger-3">
-        <p class="text-[10px] lg:text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 lg:mb-2">Status Kasir</p>
-        <div class="flex items-center gap-2 mt-1 lg:mt-2">
-            <span class="w-2.5 h-2.5 lg:w-3 lg:h-3 bg-green-500 rounded-full animate-pulse"></span>
-            <h3 class="text-lg lg:text-xl font-bold text-gray-900">Online</h3>
-        </div>
-        <p class="text-[10px] lg:text-xs text-gray-400 mt-3 lg:mt-5">Sistem siap melayani</p>
+    {{-- Laba Bersih --}}
+    @php $labaBersih = $totalPendapatanHariIni - $totalPengeluaranHariIni; @endphp
+    <div class="{{ $labaBersih >= 0 ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gradient-to-br from-red-500 to-rose-600' }} p-4 lg:p-6 rounded-2xl lg:rounded-3xl shadow-lg {{ $labaBersih >= 0 ? 'shadow-green-500/20' : 'shadow-red-500/20' }} text-white animate-fade-in-up stagger-3">
+        <p class="text-[10px] lg:text-xs font-bold opacity-70 uppercase tracking-wider mb-1 lg:mb-2">💰 Laba Bersih Hari Ini</p>
+        <h3 class="text-lg lg:text-2xl font-bold">Rp {{ number_format(abs($labaBersih), 0, ',', '.') }}</h3>
+        <p class="text-[10px] mt-2 opacity-80 italic font-medium">
+            {{ $labaBersih >= 0 ? '✅ Untung hari ini' : '⚠️ Rugi hari ini' }}
+        </p>
     </div>
 </div>
 

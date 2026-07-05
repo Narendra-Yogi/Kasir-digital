@@ -5,7 +5,6 @@
 {{-- Page Title is not yielded because we override the header entirely for POS --}}
 
 @section('content')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 @if(session('success'))
 <script>
@@ -47,14 +46,19 @@
         {{-- Custom POS Header --}}
         <div class="px-4 lg:px-8 pt-6 pb-4 shrink-0 bg-surface">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                <div>
-                    <h2 class="text-2xl font-extrabold text-gray-900">Welcome, {{ explode(' ', auth()->user()->name)[0] }}</h2>
-                    <p class="text-sm text-gray-500 mt-1">Discover whatever you need easily</p>
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-xl hover:bg-gray-100 text-gray-500 transition-colors shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-gray-900">Halo, {{ explode(' ', auth()->user()->name)[0] }} 👋</h2>
+                        <p class="text-sm text-gray-500 mt-1">Pilih menu yang dipesan pelanggan</p>
+                    </div>
                 </div>
                 <div class="flex items-center gap-3 w-full md:w-auto">
                     <div class="relative flex-1 md:w-64">
                         <svg class="w-5 h-5 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                        <input type="text" id="searchInput" onkeyup="filterMenu()" class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl bg-white focus:bg-white focus:border-brand-500 text-sm focus:outline-none transition-colors" placeholder="Search product...">
+                        <input type="text" id="searchInput" onkeyup="filterMenu()" class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl bg-white focus:bg-white focus:border-brand-500 text-sm focus:outline-none transition-colors" placeholder="Cari produk...">
                     </div>
                     <button class="p-2.5 border border-gray-200 rounded-xl bg-white text-gray-500 hover:text-brand-600 hover:border-brand-300 transition-colors shrink-0 shadow-sm">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
@@ -66,7 +70,7 @@
             <div class="flex gap-3 overflow-x-auto pb-2 custom-scrollbar-dark">
                 <button onclick="filterCategory('all', this)" class="category-btn px-5 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-medium shadow-[0_8px_20px_-6px_rgba(234,88,12,0.4)] whitespace-nowrap transition-all flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                    All Menu
+                    Semua Menu
                 </button>
                 @foreach($categories as $category)
                     <button onclick="filterCategory({{ $category->id }}, this)" class="category-btn px-5 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 text-sm font-semibold hover:border-brand-300 hover:text-brand-600 transition-all whitespace-nowrap flex items-center gap-2 shadow-sm">
@@ -149,7 +153,7 @@
             {{-- Drag handle (mobile) --}}
             <div class="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-gray-200 rounded-full lg:hidden"></div>
             
-            <h2 class="text-xl font-bold text-gray-900">Current Order</h2>
+            <h2 class="text-xl font-bold text-gray-900">Pesanan Saat Ini</h2>
             <div class="flex items-center gap-2">
                 <button type="button" onclick="resetCart()" id="btn-reset" class="hidden p-2 rounded-lg hover:bg-red-50 hover:text-red-500 text-gray-400 transition-colors" title="Reset">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -161,7 +165,7 @@
         </div>
 
         <div id="cart-items-container" class="flex-1 overflow-y-auto p-6 flex flex-col gap-5 bg-white">
-            <div class="text-center text-gray-400 mt-10">Keranjang kosong</div>
+            <div class="text-center text-gray-400 mt-10">Keranjang masih kosong</div>
         </div>
 
         <div class="p-6 bg-white shrink-0 mt-auto">
@@ -180,7 +184,7 @@
                 </div>
             </div>
             <button type="button" id="btn-checkout" disabled onclick="openCheckoutModal()" class="w-full bg-brand-600 disabled:bg-gray-300 hover:bg-brand-700 text-white font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-[0_8px_20px_-6px_rgba(234,88,12,0.5)] disabled:shadow-none">
-                Continue to Payment
+                Lanjut ke Pembayaran
             </button>
         </div>
     </aside>
@@ -190,7 +194,7 @@
 <div id="checkout-modal" class="fixed inset-0 bg-black/50 z-[60] hidden flex items-center justify-center transition-opacity opacity-0 duration-300" onclick="closeCheckoutModalOnOverlay(event)">
     <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl flex flex-col max-h-[90vh] mx-4 transition-transform scale-95 duration-300" id="checkout-modal-content">
         <div class="p-6 border-b border-gray-100 flex justify-between items-center shrink-0">
-            <h2 class="text-xl font-bold text-gray-900">Payment</h2>
+            <h2 class="text-xl font-bold text-gray-900">Pembayaran</h2>
             <button onclick="closeCheckoutModal()" class="p-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-500 transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
@@ -201,7 +205,7 @@
                 <div id="hidden-cart-inputs"></div>
 
                 <div class="space-y-4 mb-6">
-                    <input type="text" name="customer_name" placeholder="Customer Name (Optional)" class="w-full px-4 py-3.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-500 bg-gray-50 focus:bg-white transition-colors">
+                    <input type="text" name="customer_name" placeholder="Nama Pelanggan (Opsional)" class="w-full px-4 py-3.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-500 bg-gray-50 focus:bg-white transition-colors">
                     
                     <select name="payment_method" id="payment_method" class="w-full px-4 py-3.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-500 bg-gray-50 focus:bg-white cursor-pointer transition-colors">
                         <option value="cash">Cash</option>
@@ -293,7 +297,7 @@
                 
                 <button type="button" id="btn-submit" disabled onclick="confirmTransaction()" class="w-full bg-gray-900 disabled:bg-gray-300 hover:bg-black text-white font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg disabled:shadow-none mt-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Confirm Payment
+                    Konfirmasi Pembayaran
                 </button>
             </form>
         </div>
@@ -545,7 +549,7 @@
         currentTotal = 0;
 
         if (cart.length === 0) {
-            container.innerHTML = '<div class="text-center text-gray-400 mt-10">No items in cart</div>';
+            container.innerHTML = '<div class="text-center text-gray-400 mt-10">Keranjang masih kosong</div>';
             totalDisplay.innerText = 'Rp 0';
             sidebarSubtotalDisplay.innerText = 'Rp 0';
             sidebarTotalDisplay.innerText = 'Rp 0';
