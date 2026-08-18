@@ -69,6 +69,13 @@ class ReportController extends Controller
             $dataGrafikMini[]  = (int) ($pendapatanHarian->has($formatTanggal) ? $pendapatanHarian[$formatTanggal]->total : 0);
         }
 
+        // --- Mengambil Total HPP dari order_details dalam periode ini ---
+        $totalHpp = OrderDetail::whereHas('order', function($q) use ($tanggalMulai, $tanggalSelesai) {
+                $q->sukses()->antaraTanggal($tanggalMulai, $tanggalSelesai);
+            })->selectRaw('SUM(hpp * quantity) as total')->value('total') ?? 0;
+
+        $labaKotor = $totalPendapatan - $totalHpp;
+
         // --- Mengambil data transaksi dengan pagination (20 data per halaman) ---
         $pesanan = Order::with(['user', 'orderDetails.item' => function($query) {
                 $query->withTrashed(); // Tetap menampilkan produk meskipun sudah dihapus soft-delete
@@ -82,7 +89,7 @@ class ReportController extends Controller
         return view('reports.index', compact(
             'pesanan', 'totalPendapatan', 'totalTransaksi', 'totalDibatalkan', 
             'rataRataTransaksi', 'jumlahTunai', 'jumlahQris', 'tanggalMulai', 'tanggalSelesai',
-            'produkTerlaris', 'labelGrafikMini', 'dataGrafikMini'
+            'produkTerlaris', 'labelGrafikMini', 'dataGrafikMini', 'totalHpp', 'labaKotor'
         ));
     }
 
@@ -240,6 +247,15 @@ class ReportController extends Controller
             ->groupBy('date')
             ->get()->keyBy('date');
 
+        // Mengambil total HPP harian dari order_details (hpp * quantity) per tanggal
+        $hppHarian = OrderDetail::whereHas('order', function($q) use ($tanggalMulai, $tanggalSelesai) {
+                $q->sukses()->antaraTanggal($tanggalMulai, $tanggalSelesai);
+            })
+            ->join('orders', 'order_details.order_id', '=', 'orders.id')
+            ->selectRaw('DATE(orders.created_at) as tanggal, SUM(order_details.hpp * order_details.quantity) as total_hpp')
+            ->groupBy('tanggal')
+            ->get()->keyBy('tanggal');
+
         $rekapData = collect();
         $labelGrafik = [];
         $pemasukanGrafik = [];
@@ -254,6 +270,8 @@ class ReportController extends Controller
             $tanggalStr = $tanggalObjek->format('Y-m-d');
             $pemasukan = $pesanan->has($tanggalStr) ? $pesanan[$tanggalStr]->total_pemasukan : 0;
             $pengeluaranHariIni = $pengeluaran->has($tanggalStr) ? $pengeluaran[$tanggalStr]->total_pengeluaran : 0;
+            $hppHariIni = $hppHarian->has($tanggalStr) ? $hppHarian[$tanggalStr]->total_hpp : 0;
+            $labaKotor = $pemasukan - $hppHariIni;
             $laba = $pemasukan - $pengeluaranHariIni;
             
             $labelGrafik[] = $tanggalObjek->format('d M');
@@ -266,6 +284,8 @@ class ReportController extends Controller
                 $barisData = [
                     'tanggal' => $tanggalObjek->format('d M Y'),
                     'pemasukan' => $pemasukan,
+                    'hpp' => $hppHariIni,
+                    'laba_kotor' => $labaKotor,
                     'pengeluaran' => $pengeluaranHariIni,
                     'total' => $laba,
                 ];
@@ -279,16 +299,22 @@ class ReportController extends Controller
 
         $totalPemasukan = $rekapData->sum('pemasukan');
         $totalPengeluaran = $rekapData->sum('pengeluaran');
+        $totalHpp = $rekapData->sum('hpp');
+        $totalLabaKotor = $totalPemasukan - $totalHpp;
         $labaBersih = $totalPemasukan - $totalPengeluaran;
         // Menghitung margin laba kotor/bersih dalam persen
         $marginKeuntungan = $totalPemasukan > 0 ? round(($labaBersih / $totalPemasukan) * 100, 1) : 0;
+        $marginKotor = $totalPemasukan > 0 ? round(($totalLabaKotor / $totalPemasukan) * 100, 1) : 0;
 
         return [
             'rekapData' => $rekapData,
             'totalPemasukan' => $totalPemasukan,
             'totalPengeluaran' => $totalPengeluaran,
+            'totalHpp' => $totalHpp,
+            'totalLabaKotor' => $totalLabaKotor,
             'labaBersih' => $labaBersih,
             'profitMargin' => $marginKeuntungan, // Tetap gunakan key 'profitMargin' agar aman di rekap.blade.php lama
+            'marginKotor' => $marginKotor,
             'chartLabels' => $labelGrafik,
             'chartPemasukan' => $pemasukanGrafik,
             'chartPengeluaran' => $pengeluaranGrafik,
@@ -316,15 +342,19 @@ class ReportController extends Controller
         $totalPengeluaran = $pengeluaran->sum('amount');
         $labaBersih = $totalPenjualan - $totalPengeluaran;
 
-        // Rincian penjualan per item/menu hari ini
+        // Rincian penjualan per item/menu hari ini (dengan kalkulasi HPP)
         $rincianBarang = OrderDetail::whereHas('order', function($q) use ($tanggal) {
                 $q->perTanggal($tanggal)->sukses();
             })
             ->with(['item' => fn($q) => $q->withTrashed()])
-            ->selectRaw('item_id, SUM(quantity) as total_qty, SUM(subtotal) as total_amount')
+            ->selectRaw('item_id, SUM(quantity) as total_qty, SUM(subtotal) as total_amount, SUM(hpp * quantity) as total_hpp')
             ->groupBy('item_id')
             ->orderByDesc('total_amount')
             ->get();
+
+        // Hitung laba kotor total hari ini (penjualan - HPP)
+        $totalHpp = $rincianBarang->sum('total_hpp');
+        $labaKotor = $totalPenjualan - $totalHpp;
 
         // Rincian penjualan per kasir yang melayani
         $rincianKasir = Order::perTanggal($tanggal)->sukses()
@@ -348,6 +378,8 @@ class ReportController extends Controller
             'pengeluaran' => $pengeluaran,
             'totalPenjualan' => $totalPenjualan,
             'totalPengeluaran' => $totalPengeluaran,
+            'totalHpp' => $totalHpp,
+            'labaKotor' => $labaKotor,
             'labaBersih' => $labaBersih,
             'rincianBarang' => $rincianBarang,
             'rincianKasir' => $rincianKasir,
@@ -369,7 +401,7 @@ class ReportController extends Controller
                 $q->sukses()->antaraTanggal($tanggalMulai, $tanggalSelesai);
             })
             ->with(['item' => fn($q) => $q->withTrashed()])
-            ->selectRaw('item_id, SUM(quantity) as total_qty, SUM(subtotal) as total_revenue')
+            ->selectRaw('item_id, SUM(quantity) as total_qty, SUM(subtotal) as total_revenue, SUM(hpp * quantity) as total_hpp')
             ->groupBy('item_id')
             ->orderByDesc('total_revenue')
             ->limit($limit)

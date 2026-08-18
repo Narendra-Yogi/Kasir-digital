@@ -88,6 +88,7 @@ class PosController extends Controller
                     'item_id' => $item->id,
                     'quantity' => $cartItem['quantity'],
                     'price' => $item->price,
+                    'hpp'   => $item->hpp ?? 0, // Snapshot HPP saat transaksi agar historis akurat
                     'subtotal' => $item->price * $cartItem['quantity'],
                     'notes' => $cartItem['notes'] ?? null,
                     'created_at' => now(),
@@ -115,7 +116,7 @@ class PosController extends Controller
         }
     }
 
-        public function struk($id)
+        public function struk(int $id)
     {
         $order = \App\Models\Order::with('orderDetails.item', 'user')->findOrFail($id);
         return view('pos.struk', compact('order'));

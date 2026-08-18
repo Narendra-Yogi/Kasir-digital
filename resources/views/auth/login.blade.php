@@ -49,7 +49,7 @@
             <div>
                 <div class="flex justify-between items-center mb-2">
                     <label for="password" class="block text-sm font-semibold text-gray-700">Password</label>
-                    <a href="#" onclick="showForgotPasswordModal()" class="text-sm font-medium text-brand-700 hover:text-brand-800 transition-colors">Lupa Password?</a>
+                    <a href="{{ route('password.forgot') }}" class="text-sm font-medium text-brand-700 hover:text-brand-800 transition-colors">Lupa Password?</a>
                 </div>
                 <div class="relative">
                     <input type="password" name="password" id="password"
@@ -90,15 +90,16 @@
             }
         }
 
-        function showForgotPasswordModal() {
+        @if(session('success'))
+        document.addEventListener('DOMContentLoaded', function() {
             Swal.fire({
-                icon: 'info',
-                title: 'Lupa Password?',
-                text: 'Silakan hubungi Administrator (Owner) untuk melakukan reset password akun Anda.',
+                icon: 'success',
+                title: 'Berhasil!',
+                text: '{{ session("success") }}',
                 confirmButtonColor: '#ea580c',
-                confirmButtonText: 'Mengerti'
             });
-        }
+        });
+        @endif
     </script>
 
 </body>

@@ -11,11 +11,17 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\BukuKasHarianController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\IngredientController;
 
 // --- ROUTE AUTENTIKASI ---
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'authenticate']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// --- ROUTE RESET PASSWORD MANDIRI (Guest) ---
+Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.forgot');
+Route::post('/forgot-password/verify', [AuthController::class, 'verifySecurityAnswer'])->name('password.verify');
+Route::post('/forgot-password/reset', [AuthController::class, 'resetPassword'])->name('password.reset');
 
 // --- ROUTE YANG DIKUNCI (Harus Login) ---
 Route::middleware(['auth'])->group(function () {
@@ -36,8 +42,11 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:admin'])->group(function () {
         Route::put('/buku-kas-harian/{bukuKasHarian}', [BukuKasHarianController::class, 'update'])->name('buku-kas-harian.update');
         Route::resource('users', UserController::class);
+        Route::patch('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.resetPassword');
         Route::resource('categories', CategoryController::class);
         Route::resource('items', ItemController::class);
+        Route::resource('ingredients', IngredientController::class);
+        Route::get('/api/ingredients', [IngredientController::class, 'apiList'])->name('api.ingredients');
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/rekap', [ReportController::class, 'rekap'])->name('reports.rekap');
         Route::get('/reports/daily', [ReportController::class, 'dailyReport'])->name('reports.daily');

@@ -46,7 +46,7 @@
 </div>
 
 {{-- Summary Cards dengan Indikator Pertumbuhan --}}
-<div class="grid grid-cols-1 md:grid-cols-4 gap-3 lg:gap-4 mb-6 lg:mb-8 no-print">
+<div class="grid grid-cols-2 md:grid-cols-5 gap-3 lg:gap-4 mb-6 lg:mb-8 no-print">
     <div class="bg-white p-4 lg:p-5 rounded-2xl border border-gray-100 shadow-sm animate-fade-in-up">
         <p class="text-[10px] lg:text-xs font-bold text-gray-400 uppercase mb-1">Pemasukan</p>
         <h3 class="text-xl lg:text-2xl font-bold text-green-600">Rp {{ number_format($totalPenjualan, 0, ',', '.') }}</h3>
@@ -60,6 +60,16 @@
         </div>
     </div>
     <div class="bg-white p-4 lg:p-5 rounded-2xl border border-gray-100 shadow-sm animate-fade-in-up stagger-1">
+        <p class="text-[10px] lg:text-xs font-bold text-amber-600 uppercase mb-1">HPP</p>
+        <h3 class="text-xl lg:text-2xl font-bold text-amber-600">Rp {{ number_format($totalHpp ?? 0, 0, ',', '.') }}</h3>
+        <p class="text-xs text-gray-400 mt-2">Total modal</p>
+    </div>
+    <div class="bg-white p-4 lg:p-5 rounded-2xl border border-gray-100 shadow-sm animate-fade-in-up stagger-1">
+        <p class="text-[10px] lg:text-xs font-bold text-blue-600 uppercase mb-1">Laba Kotor</p>
+        <h3 class="text-xl lg:text-2xl font-bold text-blue-600">Rp {{ number_format($labaKotor ?? 0, 0, ',', '.') }}</h3>
+        <p class="text-xs text-gray-400 mt-2">Sebelum opex</p>
+    </div>
+    <div class="bg-white p-4 lg:p-5 rounded-2xl border border-gray-100 shadow-sm animate-fade-in-up stagger-1">
         <p class="text-[10px] lg:text-xs font-bold text-gray-400 uppercase mb-1">Pengeluaran</p>
         <h3 class="text-xl lg:text-2xl font-bold text-red-600">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</h3>
         <p class="text-xs text-gray-400 mt-2">{{ $pengeluaran->count() }} catatan</p>
@@ -68,11 +78,6 @@
         <p class="text-[10px] lg:text-xs font-bold opacity-70 uppercase mb-1">Laba Bersih</p>
         <h3 class="text-xl lg:text-2xl font-bold">Rp {{ number_format($labaBersih, 0, ',', '.') }}</h3>
         <p class="text-xs opacity-60 mt-2">{{ $labaBersih >= 0 ? 'Profit hari ini' : '⚠ Rugi hari ini' }}</p>
-    </div>
-    <div class="bg-white p-4 lg:p-5 rounded-2xl border border-gray-100 shadow-sm animate-fade-in-up stagger-3">
-        <p class="text-[10px] lg:text-xs font-bold text-gray-400 uppercase mb-1">vs Kemarin</p>
-        <h3 class="text-xl lg:text-2xl font-bold text-gray-600">Rp {{ number_format($penjualanKemarin, 0, ',', '.') }}</h3>
-        <p class="text-xs text-gray-400 mt-2">Penjualan kemarin</p>
     </div>
 </div>
 
@@ -89,11 +94,27 @@
             </div>
             <div class="space-y-2 overflow-y-auto max-h-56">
                 @foreach($rincianBarang as $i => $item)
-                <div class="flex items-center gap-2 py-1.5">
-                    <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: {{ ['#c2410c','#ea580c','#f97316','#fb923c','#fdba74','#fed7aa','#16a34a','#2563eb','#7c3aed','#db2777'][$i % 10] }}"></span>
-                    <span class="text-xs font-medium text-gray-700 truncate flex-1">{{ $item->item->name ?? 'Item Terhapus' }}</span>
-                    <span class="text-[10px] font-bold text-gray-400">x{{ $item->total_qty }}</span>
-                    <span class="text-xs font-bold text-gray-900">Rp {{ number_format($item->total_amount, 0, ',', '.') }}</span>
+                @php
+                    $itemHpp = $item->total_hpp ?? 0;
+                    $itemLaba = $item->total_amount - $itemHpp;
+                    $itemMargin = $item->total_amount > 0 && $itemHpp > 0 ? round(($itemLaba / $item->total_amount) * 100, 1) : null;
+                @endphp
+                <div class="py-1.5 border-b border-gray-50 last:border-0">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: {{ ['#c2410c','#ea580c','#f97316','#fb923c','#fdba74','#fed7aa','#16a34a','#2563eb','#7c3aed','#db2777'][$i % 10] }}"></span>
+                        <span class="text-xs font-medium text-gray-700 truncate flex-1">{{ $item->item->name ?? 'Item Terhapus' }}</span>
+                        <span class="text-[10px] font-bold text-gray-400">x{{ $item->total_qty }}</span>
+                        <span class="text-xs font-bold text-gray-900">Rp {{ number_format($item->total_amount, 0, ',', '.') }}</span>
+                    </div>
+                    @if($itemHpp > 0)
+                    <div class="flex items-center gap-3 mt-1 ml-4">
+                        <span class="text-[10px] text-amber-600">HPP: Rp {{ number_format($itemHpp, 0, ',', '.') }}</span>
+                        <span class="text-[10px] text-blue-600 font-semibold">Laba: Rp {{ number_format($itemLaba, 0, ',', '.') }}</span>
+                        @if($itemMargin !== null)
+                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md {{ $itemMargin >= 40 ? 'bg-green-100 text-green-700' : ($itemMargin >= 20 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700') }}">{{ $itemMargin }}%</span>
+                        @endif
+                    </div>
+                    @endif
                 </div>
                 @endforeach
             </div>

@@ -107,7 +107,11 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Modal Awal Kasir (Rupiah)</label>
-                                    <input type="text" name="starting_cash" id="starting_cash" value="200.000" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-brand-500 transition-colors font-bold text-gray-900 text-sm" placeholder="200.000" oninput="formatThousandsInput(this); calculateClosingLive()">
+                                    <div class="relative">
+                                        <input type="text" name="starting_cash" id="starting_cash" value="{{ number_format($startingCash, 0, ',', '.') }}" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-100 text-gray-900 font-bold text-sm cursor-not-allowed" readonly>
+                                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">Otomatis dari Pengeluaran</span>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 mt-1.5 leading-relaxed">Diambil otomatis dari total pengeluaran toko hari ini.</p>
                                 </div>
                                 
                                 <div>
@@ -125,7 +129,7 @@
                             <div class="p-4 rounded-2xl bg-gray-50 border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs font-bold">
                                 <div>
                                     <span class="text-gray-400 block uppercase tracking-wider">Estimasi Kas Sistem</span>
-                                    <span class="text-sm font-black text-gray-800" id="display-expected">Rp 200.000</span>
+                                    <span class="text-sm font-black text-gray-800" id="display-expected">Rp {{ number_format($startingCash + $systemCashSales - $systemExpenses, 0, ',', '.') }}</span>
                                 </div>
                                 <div>
                                     <span class="text-gray-400 block uppercase tracking-wider">Uang Fisik Kasir</span>

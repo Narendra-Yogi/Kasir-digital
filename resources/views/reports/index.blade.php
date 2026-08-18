@@ -101,11 +101,21 @@
     </div>
 
     {{-- Summary Cards --}}
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 lg:gap-4">
         <div class="bg-brand-700 p-4 lg:p-6 rounded-2xl lg:rounded-3xl shadow-lg shadow-brand-700/20 text-white flex flex-col justify-center animate-fade-in-up">
             <p class="text-[10px] lg:text-xs font-bold opacity-70 uppercase tracking-widest mb-1">Total Pendapatan</p>
             <h3 class="text-lg lg:text-2xl font-bold" data-counter="{{ $totalPendapatan }}">Rp {{ number_format($totalPendapatan, 0, ',', '.') }}</h3>
             <p class="text-[10px] mt-2 opacity-60 italic">{{ $totalTransaksi }} Transaksi Berhasil</p>
+        </div>
+        <div class="bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-amber-200 shadow-sm flex flex-col justify-center animate-fade-in-up stagger-1">
+            <p class="text-[10px] lg:text-xs font-bold text-amber-600 uppercase tracking-widest mb-1">Total HPP</p>
+            <h3 class="text-lg lg:text-2xl font-bold text-amber-600">Rp {{ number_format($totalHpp ?? 0, 0, ',', '.') }}</h3>
+            <p class="text-[10px] mt-2 text-gray-400 italic">Modal produk terjual</p>
+        </div>
+        <div class="bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-blue-200 shadow-sm flex flex-col justify-center animate-fade-in-up stagger-2">
+            <p class="text-[10px] lg:text-xs font-bold text-blue-600 uppercase tracking-widest mb-1">Laba Kotor</p>
+            <h3 class="text-lg lg:text-2xl font-bold text-blue-600">Rp {{ number_format($labaKotor ?? 0, 0, ',', '.') }}</h3>
+            <p class="text-[10px] mt-2 text-gray-400 italic">Sebelum pengeluaran</p>
         </div>
         <div class="bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center animate-fade-in-up stagger-1">
             <p class="text-[10px] lg:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Rata-rata Transaksi</p>
@@ -145,13 +155,23 @@
             @if($produkTerlaris->count() > 0)
             <div class="space-y-3">
                 @foreach($produkTerlaris as $i => $topItem)
+                @php
+                    $topHpp = $topItem->total_hpp ?? 0;
+                    $topLaba = $topItem->total_revenue - $topHpp;
+                    $topMargin = $topItem->total_revenue > 0 && $topHpp > 0 ? round(($topLaba / $topItem->total_revenue) * 100, 1) : null;
+                @endphp
                 <div class="flex items-center gap-3">
                     <span class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shrink-0 {{ $i === 0 ? 'bg-amber-100 text-amber-700' : ($i === 1 ? 'bg-gray-100 text-gray-600' : 'bg-orange-50 text-orange-400') }}">
                         {{ $i + 1 }}
                     </span>
                     <div class="flex-1 min-w-0">
                         <p class="text-xs font-bold text-gray-900 truncate">{{ $topItem->item->name ?? 'Item Terhapus' }}</p>
-                        <p class="text-[10px] text-gray-400">{{ $topItem->total_qty }} terjual</p>
+                        <div class="flex items-center gap-2">
+                            <p class="text-[10px] text-gray-400">{{ $topItem->total_qty }} terjual</p>
+                            @if($topMargin !== null)
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded {{ $topMargin >= 40 ? 'bg-green-100 text-green-700' : ($topMargin >= 20 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700') }}">{{ $topMargin }}%</span>
+                            @endif
+                        </div>
                     </div>
                     <span class="text-xs font-bold text-brand-700">Rp {{ number_format($topItem->total_revenue, 0, ',', '.') }}</span>
                 </div>

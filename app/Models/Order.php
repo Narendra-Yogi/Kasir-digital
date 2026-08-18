@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -22,25 +23,25 @@ class Order extends Model
     // --- Scope Query (Penyaringan Data) ---
 
     // Scope untuk mengambil transaksi yang berhasil/sukses
-    public function scopeSukses($query)
+    public function scopeSukses(Builder $query): Builder
     {
         return $query->where('status', 'success');
     }
 
     // Scope untuk mengambil transaksi yang dibatalkan
-    public function scopeDibatalkan($query)
+    public function scopeDibatalkan(Builder $query): Builder
     {
         return $query->where('status', 'cancelled');
     }
 
     // Scope untuk mengambil transaksi di antara dua tanggal tertentu
-    public function scopeAntaraTanggal($query, $tanggalMulai, $tanggalSelesai)
+    public function scopeAntaraTanggal(Builder $query, string $tanggalMulai, string $tanggalSelesai): Builder
     {
         return $query->whereBetween('created_at', [$tanggalMulai, $tanggalSelesai]);
     }
 
     // Scope untuk mengambil transaksi pada tanggal tertentu saja
-    public function scopePerTanggal($query, $tanggal)
+    public function scopePerTanggal(Builder $query, string $tanggal): Builder
     {
         return $query->whereDate('created_at', $tanggal);
     }

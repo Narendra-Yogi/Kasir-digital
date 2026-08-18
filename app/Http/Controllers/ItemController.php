@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Item;
 use App\Models\Category;
+use App\Models\Ingredient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -12,16 +13,21 @@ class ItemController extends Controller
 {
     public function index()
     {
-        // Mengambil semua menu diurutkan dari yang terbaru beserta data kategorinya
-        $items = Item::with('category')->latest()->get();
+        // Mengambil semua menu diurutkan dari yang terbaru beserta data kategorinya dan resep bahan
+        $items = Item::with(['category', 'itemIngredients.ingredient'])->latest()->get();
         return view('items.index', compact('items'));
     }
 
     public function create()
     {
-        // Mengambil seluruh data kategori untuk pilihan di form tambah menu
+        // Mengambil seluruh data kategori dan bahan baku untuk form tambah menu
         $categories = Category::all();
-        return view('items.create', compact('categories'));
+        $ingredients = Ingredient::orderBy('name')->get();
+
+        // Tambahkan data satuan kompatibel untuk dropdown di form resep
+        $ingredients->each(fn($ing) => $ing->compatible_units = $ing->getCompatibleUnits());
+
+        return view('items.create', compact('categories', 'ingredients'));
     }
 
     public function store(Request $request)
@@ -39,6 +45,11 @@ class ItemController extends Controller
             'stock'        => 'nullable|integer|min:0',
             'is_available' => 'required|boolean',
             'image'        => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', // Batas ukuran 2MB
+            // Validasi resep bahan
+            'ingredients'            => 'nullable|array',
+            'ingredients.*.id'       => 'required_with:ingredients|exists:ingredients,id',
+            'ingredients.*.quantity' => 'required_with:ingredients|numeric|min:0.01',
+            'ingredients.*.unit'     => 'nullable|string|max:20',
         ]);
 
         $jalurGambar = null;
@@ -48,16 +59,20 @@ class ItemController extends Controller
             $jalurGambar = $request->file('image')->store('items', 'public');
         }
 
-        // Menyimpan menu baru ke database
-        Item::create([
+        // Menyimpan menu baru ke database (HPP awal 0, akan dihitung dari resep)
+        $item = Item::create([
             'category_id'  => $request->category_id,
             'name'         => $request->name,
             'price'        => $request->price,
+            'hpp'          => 0,
             'stock'        => $request->filled('stock') ? $request->stock : 0,
             'is_available' => $request->is_available,
             'image'        => $jalurGambar,
             'created_by'   => $request->user()->id,
         ]);
+
+        // Simpan resep bahan dan hitung HPP otomatis
+        $this->syncIngredients($item, $request->input('ingredients', []));
 
         Cache::forget('pos_categories'); // Invalidasi cache POS
         return redirect()->route('items.index')->with('success', 'Menu baru berhasil ditambahkan.');
@@ -66,7 +81,13 @@ class ItemController extends Controller
     public function edit(Item $item)
     {
         $categories = Category::all();
-        return view('items.edit', compact('item', 'categories'));
+        $ingredients = Ingredient::orderBy('name')->get();
+        $item->load('itemIngredients.ingredient');
+
+        // Tambahkan data satuan kompatibel untuk dropdown di form resep
+        $ingredients->each(fn($ing) => $ing->compatible_units = $ing->getCompatibleUnits());
+
+        return view('items.edit', compact('item', 'categories', 'ingredients'));
     }
 
     public function update(Request $request, Item $item)
@@ -84,6 +105,11 @@ class ItemController extends Controller
             'stock'        => 'nullable|integer|min:0',
             'is_available' => 'required|boolean',
             'image'        => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', // Batas ukuran 2MB
+            // Validasi resep bahan
+            'ingredients'            => 'nullable|array',
+            'ingredients.*.id'       => 'required_with:ingredients|exists:ingredients,id',
+            'ingredients.*.quantity' => 'required_with:ingredients|numeric|min:0.01',
+            'ingredients.*.unit'     => 'nullable|string|max:20',
         ]);
 
         $jalurGambar = $item->image;
@@ -109,6 +135,9 @@ class ItemController extends Controller
             'updated_by'   => $request->user()->id,
         ]);
 
+        // Sync resep bahan dan hitung ulang HPP otomatis
+        $this->syncIngredients($item, $request->input('ingredients', []));
+
         Cache::forget('pos_categories'); // Invalidasi cache POS
         return redirect()->route('items.index')->with('success', 'Menu berhasil diperbarui.');
     }
@@ -119,5 +148,33 @@ class ItemController extends Controller
         $item->delete();
         Cache::forget('pos_categories'); // Invalidasi cache POS
         return redirect()->route('items.index')->with('success', 'Menu berhasil dihapus.');
+    }
+
+    /**
+     * Menyinkronkan resep bahan produk dan menghitung ulang HPP.
+     * 
+     * @param Item $item Produk yang resepnya disinkronkan
+     * @param array $ingredients Array resep bahan [{id, quantity}, ...]
+     */
+    private function syncIngredients(Item $item, array $ingredients): void
+    {
+        // Hapus resep lama
+        $item->itemIngredients()->delete();
+
+        // Simpan resep baru jika ada
+        if (!empty($ingredients)) {
+            foreach ($ingredients as $ingredientData) {
+                if (!empty($ingredientData['id']) && !empty($ingredientData['quantity'])) {
+                    $item->itemIngredients()->create([
+                        'ingredient_id'  => $ingredientData['id'],
+                        'quantity_needed' => $ingredientData['quantity'],
+                        'unit_used'      => $ingredientData['unit'] ?? null,
+                    ]);
+                }
+            }
+        }
+
+        // Hitung ulang HPP dari resep bahan
+        $item->recalculateHpp();
     }
 }

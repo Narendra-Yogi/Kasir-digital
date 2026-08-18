@@ -46,6 +46,9 @@
                 </td>
                 <td class="px-6 py-4">
                     <div class="flex items-center justify-end gap-2">
+                        <button type="button" onclick="resetPassword({{ $user->id }}, '{{ addslashes($user->name) }}')" class="flex items-center justify-center w-9 h-9 rounded-xl bg-amber-50 text-amber-600 hover:bg-amber-100 active:scale-95 transition-all duration-200 shadow-sm cursor-pointer" title="Reset Password">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                        </button>
                         <a href="{{ route('users.edit', $user->id) }}" class="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 active:scale-95 transition-all duration-200 shadow-sm" title="Edit Pengguna">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                         </a>
@@ -62,4 +65,57 @@
         </tbody>
     </table>
 </div>
+
+<script>
+function resetPassword(userId, userName) {
+    Swal.fire({
+        title: 'Reset Password?',
+        html: `Password akun <b>${userName}</b> akan direset ke password baru yang digenerate otomatis.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ea580c',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Ya, Reset!',
+        cancelButtonText: 'Batal',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/users/${userId}/reset-password`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Password Berhasil Direset!',
+                        html: `
+                            <div style="text-align:left; background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; padding:16px; margin-top:8px;">
+                                <p style="font-size:13px; color:#6b7280; margin-bottom:4px;">Akun: <b style="color:#111827;">${data.user_name}</b></p>
+                                <p style="font-size:13px; color:#6b7280; margin-bottom:0;">Password Baru:</p>
+                                <p style="font-size:24px; font-weight:900; color:#ea580c; letter-spacing:3px; margin:8px 0 0 0; font-family:monospace;">${data.new_password}</p>
+                            </div>
+                            <p style="font-size:11px; color:#9ca3af; margin-top:12px;">⚠️ Catat password ini dan beritahukan ke pengguna. Password tidak bisa dilihat lagi setelah dialog ini ditutup.</p>
+                        `,
+                        confirmButtonColor: '#ea580c',
+                        confirmButtonText: 'Sudah Dicatat',
+                    });
+                }
+            })
+            .catch(() => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: 'Terjadi kesalahan saat mereset password.',
+                    confirmButtonColor: '#d33',
+                });
+            });
+        }
+    });
+}
+</script>
 @endsection

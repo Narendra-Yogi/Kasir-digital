@@ -16,12 +16,14 @@
 
 <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm animate-fade-in-up stagger-1">
     <div class="overflow-x-auto">
-        <table class="w-full text-left min-w-[600px]">
+        <table class="w-full text-left min-w-[700px]">
             <thead class="bg-gray-50 border-b border-gray-100">
                 <tr>
                     <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Nama Menu</th>
                     <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Kategori</th>
-                    <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Harga</th>
+                    <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Harga Jual</th>
+                    <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">HPP</th>
+                    <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Margin</th>
                     <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Stok</th>
                     <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
                     <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Aksi</th>
@@ -44,6 +46,53 @@
                     </td>
                     <td class="px-6 py-4 text-gray-500 text-sm">{{ $item->category->name }}</td>
                     <td class="px-6 py-4 font-semibold text-gray-900">Rp {{ number_format($item->price, 0, ',', '.') }}</td>
+                    <td class="px-6 py-4 text-sm">
+                        @if($item->hpp > 0)
+                            <div class="group relative">
+                                <span class="text-gray-700 font-medium cursor-help border-b border-dashed border-gray-300">Rp {{ number_format($item->hpp, 0, ',', '.') }}</span>
+                                @if($item->itemIngredients->count() > 0)
+                                {{-- Tooltip detail resep bahan --}}
+                                <div class="absolute z-50 bottom-full left-0 mb-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
+                                    <p class="font-bold text-amber-300 mb-2">📊 Detail Resep Bahan:</p>
+                                    @foreach($item->itemIngredients as $ii)
+                                    <div class="flex justify-between py-0.5">
+                                        <span>{{ $ii->ingredient->name }} × {{ rtrim(rtrim(number_format($ii->quantity_needed, 2, ',', '.'), '0'), ',') }} {{ $ii->unit_used ?? $ii->ingredient->unit }}</span>
+                                        <span class="font-medium">Rp {{ number_format($ii->cost, 0, ',', '.') }}</span>
+                                    </div>
+                                    @endforeach
+                                    <div class="border-t border-gray-600 mt-1.5 pt-1.5 flex justify-between font-bold">
+                                        <span>Total HPP</span>
+                                        <span class="text-amber-300">Rp {{ number_format($item->hpp, 0, ',', '.') }}</span>
+                                    </div>
+                                    <div class="absolute bottom-0 left-4 translate-y-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                                </div>
+                                <p class="text-[10px] text-gray-400 mt-0.5">{{ $item->itemIngredients->count() }} bahan</p>
+                                @endif
+                            </div>
+                        @else
+                            <span class="text-gray-300 italic text-xs">Belum ada resep</span>
+                        @endif
+                    </td>
+                    <td class="px-6 py-4">
+                        @if($item->hpp > 0)
+                            @php $margin = $item->margin; @endphp
+                            @if($margin >= 40)
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd"/></svg>
+                                    {{ $margin }}%
+                                </span>
+                            @elseif($margin >= 20)
+                                <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">{{ $margin }}%</span>
+                            @else
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12 13a1 1 0 100 2h5a1 1 0 001-1V9a1 1 0 10-2 0v2.586l-4.293-4.293a1 1 0 00-1.414 0L8 9.586 3.707 5.293a1 1 0 00-1.414 1.414l5 5a1 1 0 001.414 0L11 9.414 14.586 13H12z" clip-rule="evenodd"/></svg>
+                                    {{ $margin }}%
+                                </span>
+                            @endif
+                        @else
+                            <span class="text-gray-300 text-xs">-</span>
+                        @endif
+                    </td>
                     <td class="px-6 py-4 font-medium text-gray-700">{{ $item->stock }}</td>
                     <td class="px-6 py-4">
                         @if(!$item->is_available || $item->stock === 0)
@@ -70,7 +119,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="px-6 py-12 text-center text-gray-400 italic">Belum ada menu yang ditambahkan.</td>
+                    <td colspan="8" class="px-6 py-12 text-center text-gray-400 italic">Belum ada menu yang ditambahkan.</td>
                 </tr>
                 @endforelse
             </tbody>

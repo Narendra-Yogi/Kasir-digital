@@ -12,6 +12,7 @@ class OrderDetail extends Model
         'item_id',
         'quantity',
         'price',
+        'hpp',
         'subtotal',
         'notes',
     ];

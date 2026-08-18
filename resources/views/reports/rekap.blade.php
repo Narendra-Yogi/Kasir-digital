@@ -45,18 +45,30 @@
 </div>
 
 {{-- Summary Cards --}}
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
+<div class="grid grid-cols-2 lg:grid-cols-6 gap-3 lg:gap-4 mb-6">
     <div class="bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm text-center animate-fade-in-up">
         <p class="text-[10px] lg:text-xs font-bold text-gray-400 uppercase mb-1">Total Pemasukan</p>
         <h3 class="text-lg lg:text-2xl font-bold text-green-600">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</h3>
     </div>
     <div class="bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm text-center animate-fade-in-up stagger-1">
+        <p class="text-[10px] lg:text-xs font-bold text-gray-400 uppercase mb-1">Total HPP</p>
+        <h3 class="text-lg lg:text-2xl font-bold text-amber-600">Rp {{ number_format($totalHpp ?? 0, 0, ',', '.') }}</h3>
+        <p class="text-[10px] text-gray-400 mt-0.5">Modal / HPP</p>
+    </div>
+    <div class="bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm text-center animate-fade-in-up stagger-1">
+        <p class="text-[10px] lg:text-xs font-bold text-gray-400 uppercase mb-1">Laba Kotor</p>
+        <h3 class="text-lg lg:text-2xl font-bold {{ ($totalLabaKotor ?? 0) >= 0 ? 'text-blue-600' : 'text-red-600' }}">Rp {{ number_format($totalLabaKotor ?? 0, 0, ',', '.') }}</h3>
+        <p class="text-[10px] text-gray-400 mt-0.5">{{ $marginKotor ?? 0 }}% margin kotor</p>
+    </div>
+    <div class="bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm text-center animate-fade-in-up stagger-1">
         <p class="text-[10px] lg:text-xs font-bold text-gray-400 uppercase mb-1">Total Pengeluaran</p>
         <h3 class="text-lg lg:text-2xl font-bold text-red-600">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</h3>
+        <p class="text-[10px] text-gray-400 mt-0.5">Operasional</p>
     </div>
     <div class="{{ $labaBersih >= 0 ? 'bg-brand-700 shadow-brand-700/20' : 'bg-red-600 shadow-red-600/20' }} p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-transparent shadow-lg text-center text-white animate-fade-in-up stagger-2">
         <p class="text-[10px] lg:text-xs font-bold opacity-80 uppercase mb-1">{{ $labaBersih >= 0 ? 'Laba Bersih' : '⚠ Kerugian' }}</p>
         <h3 class="text-lg lg:text-2xl font-bold">Rp {{ number_format($labaBersih, 0, ',', '.') }}</h3>
+        <p class="text-[10px] opacity-70 mt-0.5">Setelah pengeluaran</p>
     </div>
     <div class="bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm text-center animate-fade-in-up stagger-3">
         <p class="text-[10px] lg:text-xs font-bold text-gray-400 uppercase mb-1">Profit Margin</p>
@@ -115,8 +127,10 @@
                 <tr>
                     <th class="px-4 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-700 uppercase">Hari / Tanggal</th>
                     <th class="px-4 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-700 uppercase text-right">Pemasukan</th>
+                    <th class="px-4 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-amber-600 uppercase text-right">HPP</th>
+                    <th class="px-4 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-blue-600 uppercase text-right">Laba Kotor</th>
                     <th class="px-4 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-700 uppercase text-right">Pengeluaran</th>
-                    <th class="px-4 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-700 uppercase text-right">Laba / Rugi</th>
+                    <th class="px-4 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-700 uppercase text-right">Laba Bersih</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -132,6 +146,20 @@
                     <td class="px-4 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm font-semibold text-green-600 text-right">
                         Rp {{ number_format($data['pemasukan'], 0, ',', '.') }}
                     </td>
+                    <td class="px-4 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm font-medium text-amber-600 text-right">
+                        @if(($data['hpp'] ?? 0) > 0)
+                            Rp {{ number_format($data['hpp'], 0, ',', '.') }}
+                        @else
+                            <span class="text-gray-300">-</span>
+                        @endif
+                    </td>
+                    <td class="px-4 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm font-semibold text-blue-600 text-right">
+                        @if(($data['hpp'] ?? 0) > 0)
+                            Rp {{ number_format($data['laba_kotor'] ?? 0, 0, ',', '.') }}
+                        @else
+                            <span class="text-gray-300 text-xs">-</span>
+                        @endif
+                    </td>
                     <td class="px-4 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm font-semibold text-red-600 text-right">
                         Rp {{ number_format($data['pengeluaran'], 0, ',', '.') }}
                     </td>
@@ -142,7 +170,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="4" class="px-6 py-12 text-center text-gray-400 italic">Tidak ada data transaksi atau pengeluaran pada rentang waktu ini.</td>
+                    <td colspan="6" class="px-6 py-12 text-center text-gray-400 italic">Tidak ada data transaksi atau pengeluaran pada rentang waktu ini.</td>
                 </tr>
                 @endforelse
                 
@@ -150,6 +178,8 @@
                 <tr class="bg-gray-50 border-t-2 border-gray-200">
                     <td class="px-4 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm font-bold text-gray-900 uppercase">Total Keseluruhan</td>
                     <td class="px-4 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm font-bold text-green-600 text-right">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</td>
+                    <td class="px-4 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm font-bold text-amber-600 text-right">Rp {{ number_format($totalHpp ?? 0, 0, ',', '.') }}</td>
+                    <td class="px-4 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm font-bold text-blue-600 text-right">Rp {{ number_format($totalLabaKotor ?? 0, 0, ',', '.') }}</td>
                     <td class="px-4 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm font-bold text-red-600 text-right">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</td>
                     <td class="px-4 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm font-bold {{ $labaBersih >= 0 ? 'text-brand-700' : 'text-red-600' }} text-right">Rp {{ number_format($labaBersih, 0, ',', '.') }}</td>
                 </tr>

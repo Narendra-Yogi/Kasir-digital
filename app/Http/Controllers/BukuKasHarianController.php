@@ -26,6 +26,7 @@ class BukuKasHarianController extends Controller
         $systemCashSales = 0;
         $systemQrisSales = 0;
         $systemExpenses = 0;
+        $startingCash = 0;
 
         if (!$alreadyClosed) {
             // Jumlah Penjualan Tunai Sukses Hari Ini
@@ -43,6 +44,9 @@ class BukuKasHarianController extends Controller
             // Jumlah Pengeluaran Toko Hari Ini
             $systemExpenses = Pengeluaran::whereDate('date', $today)
                 ->sum('amount');
+
+            // Modal Awal Kasir = Total Pengeluaran Hari Ini (otomatis dari data pengeluaran)
+            $startingCash = $systemExpenses;
         }
 
         return view('buku_kas_harian.index', compact(
@@ -51,6 +55,7 @@ class BukuKasHarianController extends Controller
             'systemCashSales',
             'systemQrisSales',
             'systemExpenses',
+            'startingCash',
             'today'
         ));
     }
@@ -67,15 +72,13 @@ class BukuKasHarianController extends Controller
             return back()->with('error', 'Laporan tutup buku kasir hari ini sudah dibuat sebelumnya.');
         }
 
-        // Bersihkan tanda titik ribuan dari input modal & uang aktual sebelum divalidasi
+        // Bersihkan tanda titik ribuan dari input uang aktual sebelum divalidasi
         $request->merge([
-            'starting_cash' => str_replace('.', '', $request->starting_cash),
             'actual_cash'   => str_replace('.', '', $request->actual_cash),
         ]);
 
-        // Validasi input data modal awal & uang laci aktual
+        // Validasi input data uang laci aktual
         $request->validate([
-            'starting_cash' => 'required|numeric|min:0',
             'actual_cash'   => 'required|numeric|min:0',
             'notes'         => 'nullable|string|max:1000',
         ]);
@@ -94,8 +97,11 @@ class BukuKasHarianController extends Controller
         $systemExpenses = Pengeluaran::whereDate('date', $today)
             ->sum('amount');
 
+        // Modal Awal Kasir = Total Pengeluaran Hari Ini (otomatis dari data pengeluaran)
+        $startingCash = $systemExpenses;
+
         // Hitung estimasi kas teoritis sistem: (Modal Awal + Penjualan Tunai - Pengeluaran)
-        $expectedCash = $request->starting_cash + $systemCashSales - $systemExpenses;
+        $expectedCash = $startingCash + $systemCashSales - $systemExpenses;
 
         // Hitung selisih kas: (Uang Fisik Aktual - Estimasi Uang Kas Sistem)
         $discrepancy = $request->actual_cash - $expectedCash;
@@ -104,7 +110,7 @@ class BukuKasHarianController extends Controller
         BukuKasHarian::create([
             'date'              => $today,
             'user_id'           => $request->user()->id,
-            'starting_cash'     => $request->starting_cash,
+            'starting_cash'     => $startingCash,
             'system_cash_sales' => $systemCashSales,
             'system_qris_sales' => $systemQrisSales,
             'system_expenses'   => $systemExpenses,

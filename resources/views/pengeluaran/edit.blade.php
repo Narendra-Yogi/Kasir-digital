@@ -25,7 +25,6 @@
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Kategori</label>
                     <select name="category" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-brand-500 outline-none cursor-pointer" required>
-                        <option value="bahan" {{ $pengeluaran->category == 'bahan' ? 'selected' : '' }}>Bahan Baku</option>
                         <option value="logistik" {{ $pengeluaran->category == 'logistik' ? 'selected' : '' }}>Logistik</option>
                         <option value="lainnya" {{ $pengeluaran->category == 'lainnya' ? 'selected' : '' }}>Lainnya</option>
                     </select>

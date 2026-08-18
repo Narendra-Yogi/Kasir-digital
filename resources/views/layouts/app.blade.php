@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title') - Geprek Legend</title>
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -63,6 +64,11 @@
             <a href="{{ route('items.index') }}" class="sidebar-link {{ request()->routeIs('items.*') ? 'active text-brand-750 bg-brand-50/50 font-bold' : 'text-gray-500 hover:text-brand-600 hover:bg-gray-50/50' }} flex items-center gap-3.5 px-6 py-3 mx-3 rounded-xl transition-all duration-200 text-sm font-semibold">
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                 <span>Daftar Menu</span>
+            </a>
+
+            <a href="{{ route('ingredients.index') }}" class="sidebar-link {{ request()->routeIs('ingredients.*') ? 'active text-brand-750 bg-brand-50/50 font-bold' : 'text-gray-500 hover:text-brand-600 hover:bg-gray-50/50' }} flex items-center gap-3.5 px-6 py-3 mx-3 rounded-xl transition-all duration-200 text-sm font-semibold">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                <span>Bahan Baku</span>
             </a>
 
             <a href="{{ route('categories.index') }}" class="sidebar-link {{ request()->routeIs('categories.*') ? 'active text-brand-750 bg-brand-50/50 font-bold' : 'text-gray-500 hover:text-brand-600 hover:bg-gray-50/50' }} flex items-center gap-3.5 px-6 py-3 mx-3 rounded-xl transition-all duration-200 text-sm font-semibold">
