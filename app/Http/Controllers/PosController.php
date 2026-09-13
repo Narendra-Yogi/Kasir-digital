@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Item;
 use App\Models\Order;
 use App\Models\OrderDetail;
+use App\Models\ItemIngredient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -105,6 +106,31 @@ class PosController extends Controller
             // Insert semua OrderDetail sekaligus dengan 1 query
             OrderDetail::insert($orderDetails);
 
+            // === KURANGI STOK BAHAN BAKU BERDASARKAN RESEP ===
+            // Ambil semua resep bahan untuk item yang dipesan (1 query efisien)
+            $itemIngredients = ItemIngredient::with('ingredient')
+                ->whereIn('item_id', $cartItemIds)
+                ->get()
+                ->groupBy('item_id');
+
+            foreach ($cartData as $cartItem) {
+                $recipes = $itemIngredients->get($cartItem['item_id']);
+                if (!$recipes) continue;
+
+                $orderedQty = $cartItem['quantity']; // Jumlah porsi yang dipesan
+
+                foreach ($recipes as $recipe) {
+                    if (!$recipe->ingredient) continue;
+
+                    // Hitung total bahan yang dibutuhkan = kebutuhan per porsi × jumlah porsi
+                    $totalNeeded = $recipe->quantity_needed * $orderedQty;
+                    $unitUsed = $recipe->unit_used ?? $recipe->ingredient->unit;
+
+                    // Kurangi stok bahan (dengan konversi satuan otomatis)
+                    $recipe->ingredient->deductStock($totalNeeded, $unitUsed);
+                }
+            }
+
             DB::commit();
             return redirect()->route('pos.index')->with([
                 'success'  => 'Transaksi sukses! Kembalian: Rp ' . number_format($order->change, 0, ',', '.'),
@@ -122,3 +148,4 @@ class PosController extends Controller
         return view('pos.struk', compact('order'));
     }
 }
+

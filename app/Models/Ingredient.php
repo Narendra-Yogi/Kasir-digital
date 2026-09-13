@@ -18,6 +18,7 @@ class Ingredient extends Model
         'purchase_quantity',
         'unit',
         'cost_per_unit',
+        'current_stock',
         'created_by',
     ];
 
@@ -94,6 +95,67 @@ class Ingredient extends Model
     }
 
     /**
+     * Mengurangi stok bahan berdasarkan jumlah yang digunakan.
+     * Otomatis konversi satuan jika unit_used berbeda dari unit bahan.
+     *
+     * Contoh: Bahan unit=kg, deductStock(500, 'gram') → kurangi 0.5 kg
+     *
+     * @param float $quantity Jumlah yang digunakan
+     * @param string|null $unitUsed Satuan yang dipakai di resep (null = pakai satuan bahan)
+     */
+    public function deductStock(float $quantity, ?string $unitUsed = null): void
+    {
+        $unitUsed = $unitUsed ?? $this->unit;
+
+        // Konversi ke satuan dasar bahan jika berbeda
+        if ($unitUsed !== $this->unit) {
+            $factor = self::getConversionFactor($unitUsed, $this->unit);
+            $quantity = $quantity * $factor;
+        }
+
+        $this->decrement('current_stock', round($quantity, 2));
+    }
+
+    /**
+     * Menambah stok bahan (untuk restok/beli tambahan).
+     *
+     * @param float $quantity Jumlah yang ditambahkan (dalam satuan bahan)
+     */
+    public function addStock(float $quantity): void
+    {
+        $this->increment('current_stock', round($quantity, 2));
+    }
+
+    /**
+     * Mendapatkan status stok bahan: 'habis', 'menipis', atau 'aman'.
+     * - habis: stok <= 0
+     * - menipis: stok <= 30% dari jumlah pembelian terakhir
+     * - aman: stok > 30%
+     */
+    public function getStockStatusAttribute(): string
+    {
+        if ($this->current_stock <= 0) {
+            return 'habis';
+        }
+
+        $threshold = $this->purchase_quantity * 0.3;
+        if ($this->current_stock <= $threshold) {
+            return 'menipis';
+        }
+
+        return 'aman';
+    }
+
+    /**
+     * Mendapatkan persentase sisa stok terhadap jumlah pembelian terakhir.
+     */
+    public function getStockPercentageAttribute(): float
+    {
+        if ($this->purchase_quantity <= 0) return 0;
+        return min(100, round(($this->current_stock / $this->purchase_quantity) * 100, 1));
+    }
+
+    /**
      * Relasi: Bahan ini digunakan di banyak produk (melalui item_ingredients).
      */
     public function items(): BelongsToMany
@@ -111,3 +173,4 @@ class Ingredient extends Model
         return $this->hasMany(ItemIngredient::class);
     }
 }
+

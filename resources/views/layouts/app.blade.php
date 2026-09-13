@@ -22,16 +22,12 @@
         
         {{-- Logo Brand Area --}}
         <div class="h-20 flex items-center px-6 gap-3 shrink-0 border-b border-gray-100 relative bg-white">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-400 text-white flex items-center justify-center shadow-lg shadow-brand-600/30 shrink-0">
-                <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2C11.5 3.5 10.5 4.5 9.5 5.5C7.5 7.5 6.5 9.5 6.5 12C6.5 15 8.5 17.5 11.5 18C12.5 18.2 13.5 18 14.5 17.5C16.5 16.5 17.5 14.5 17.5 12C17.5 9.5 16 7.5 14 5.5C13 4.5 12.5 3.5 12 2Z" fill="currentColor"/>
-                    <path d="M12 6.5C11.7 7.5 11 8.2 10.3 8.8C8.8 10.2 8 11.5 8 13.2C8 15.2 9.5 16.8 11.5 17.2C12 17.3 12.5 17.2 13 16.8C14.2 16 15 14.8 15 13.2C15 11.5 14 10.2 12.7 8.8C12.3 8.2 12 7.5 12 6.5Z" fill="#fff7ed"/>
-                    <path d="M12 11.5L13.5 12.2L12 13V11.5Z" fill="#ea580c"/>
-                </svg>
+            <div class="w-12 h-12 rounded-xl overflow-hidden shadow-lg shadow-brand-600/20 shrink-0 ring-1 ring-gray-100">
+                <img src="{{ asset('images/logo.jpeg') }}" alt="Geprek Legend" class="w-full h-full object-cover">
             </div>
             <div class="flex flex-col">
                 <h1 class="text-sm font-extrabold tracking-tight text-gray-900 leading-none">Geprek Legend</h1>
-                <span class="text-[9px] text-brand-600 mt-1 font-semibold uppercase tracking-wider">Kasir Digital</span>
+                <span class="text-[10px] text-brand-600 mt-1 font-semibold uppercase tracking-wider">Kasir Digital</span>
             </div>
             <button onclick="toggleSidebar()" class="lg:hidden absolute top-1/2 -translate-y-1/2 right-3 p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-500 transition-colors z-50">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>

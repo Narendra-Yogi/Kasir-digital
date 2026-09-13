@@ -46,6 +46,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('categories', CategoryController::class);
         Route::resource('items', ItemController::class);
         Route::resource('ingredients', IngredientController::class);
+        Route::post('ingredients/{ingredient}/restock', [IngredientController::class, 'restock'])->name('ingredients.restock');
         Route::get('/api/ingredients', [IngredientController::class, 'apiList'])->name('api.ingredients');
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/rekap', [ReportController::class, 'rekap'])->name('reports.rekap');

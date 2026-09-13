@@ -76,13 +76,16 @@
                     </div>
                 </div>
 
-                {{-- Info: Pengeluaran Otomatis --}}
+                {{-- Info: Pengeluaran & Stok Otomatis --}}
                 <div class="p-4 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200">
                     <div class="flex items-start gap-3">
                         <div class="w-8 h-8 bg-green-100 text-green-600 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </div>
-                        <p class="text-xs text-green-700 leading-relaxed">Saat bahan disimpan, <strong>pengeluaran akan otomatis tercatat</strong> di halaman Catatan Pengeluaran. Anda tidak perlu input pengeluaran bahan secara manual.</p>
+                        <div class="text-xs text-green-700 leading-relaxed">
+                            <p class="mb-1"><strong>✅ Pengeluaran otomatis tercatat</strong> di halaman Catatan Pengeluaran.</p>
+                            <p><strong>📦 Stok awal otomatis diset</strong> dari jumlah beli. Stok akan otomatis berkurang setiap kali ada penjualan lewat kasir.</p>
+                        </div>
                     </div>
                 </div>
 

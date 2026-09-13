@@ -12,7 +12,13 @@ class IngredientController extends Controller
     public function index()
     {
         $ingredients = Ingredient::latest()->get();
-        return view('ingredients.index', compact('ingredients'));
+
+        // Summary data untuk card di atas tabel
+        $totalBahan = $ingredients->count();
+        $bahanHabis = $ingredients->where('current_stock', '<=', 0)->count();
+        $bahanMenipis = $ingredients->filter(fn($i) => $i->stock_status === 'menipis')->count();
+
+        return view('ingredients.index', compact('ingredients', 'totalBahan', 'bahanHabis', 'bahanMenipis'));
     }
 
     public function create()
@@ -39,6 +45,7 @@ class IngredientController extends Controller
             'purchase_price'    => $request->purchase_price,
             'purchase_quantity' => $request->purchase_quantity,
             'unit'              => $request->unit,
+            'current_stock'     => $request->purchase_quantity, // Stok awal = jumlah beli
             'created_by'        => $request->user()->id,
         ]);
 
@@ -88,6 +95,51 @@ class IngredientController extends Controller
         return redirect()->route('ingredients.index')->with('success', 'Bahan baku berhasil diperbarui & HPP produk terkait telah dihitung ulang.');
     }
 
+    /**
+     * Restok bahan baku yang sudah ada (beli tambahan).
+     * Menambah current_stock, opsional update harga beli, dan catat pengeluaran.
+     */
+    public function restock(Request $request, Ingredient $ingredient)
+    {
+        $request->merge([
+            'restock_price' => str_replace('.', '', $request->restock_price),
+        ]);
+
+        $request->validate([
+            'restock_quantity'  => 'required|numeric|min:0.01',
+            'restock_price'     => 'required|numeric|min:1',
+        ]);
+
+        $restockQty = $request->restock_quantity;
+        $restockPrice = $request->restock_price;
+
+        // Tambah stok
+        $ingredient->addStock($restockQty);
+
+        // Update harga beli & quantity referensi jika harga berubah
+        $ingredient->update([
+            'purchase_price'    => $restockPrice,
+            'purchase_quantity' => $restockQty,
+        ]);
+
+        // Recalculate HPP produk terkait karena harga bahan mungkin berubah
+        $this->recalculateAffectedItems($ingredient);
+
+        // Catat pengeluaran restok
+        Pengeluaran::create([
+            'date'          => now()->format('Y-m-d'),
+            'item_name'     => 'Restok ' . $ingredient->name . ' (' . rtrim(rtrim(number_format($restockQty, 2, ',', '.'), '0'), ',') . ' ' . $ingredient->unit . ')',
+            'category'      => 'bahan',
+            'amount'        => $restockPrice,
+            'notes'         => 'Otomatis dari restok bahan baku',
+            'created_by'    => $request->user()->id,
+            'ingredient_id' => $ingredient->id,
+        ]);
+
+        return redirect()->route('ingredients.index')
+            ->with('success', "Berhasil restok {$ingredient->name}: +" . rtrim(rtrim(number_format($restockQty, 2, ',', '.'), '0'), ',') . " {$ingredient->unit}. Pengeluaran otomatis tercatat.");
+    }
+
     public function destroy(Ingredient $ingredient)
     {
         // Cek apakah bahan ini masih digunakan di produk
@@ -109,7 +161,7 @@ class IngredientController extends Controller
      */
     public function apiList()
     {
-        $ingredients = Ingredient::orderBy('name')->get(['id', 'name', 'cost_per_unit', 'unit']);
+        $ingredients = Ingredient::orderBy('name')->get(['id', 'name', 'cost_per_unit', 'unit', 'current_stock']);
 
         // Tambahkan data satuan kompatibel untuk setiap bahan
         $ingredients->each(function ($ingredient) {
@@ -134,3 +186,4 @@ class IngredientController extends Controller
         Cache::forget('pos_categories');
     }
 }
+

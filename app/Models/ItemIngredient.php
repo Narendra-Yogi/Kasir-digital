@@ -52,4 +52,27 @@ class ItemIngredient extends Model
     {
         return $this->belongsTo(Ingredient::class);
     }
+
+    /**
+     * Mendapatkan jumlah bahan dalam satuan dasar bahan (base unit).
+     * Digunakan untuk menghitung pengurangan stok saat penjualan.
+     *
+     * Contoh: quantity_needed=500, unit_used=gram, ingredient.unit=kg
+     * → return 0.5 (kg)
+     */
+    public function getQuantityInBaseUnitAttribute(): float
+    {
+        if (!$this->ingredient) return 0;
+
+        $quantity = $this->quantity_needed;
+        $unitUsed = $this->unit_used ?? $this->ingredient->unit;
+
+        if ($unitUsed !== $this->ingredient->unit) {
+            $factor = Ingredient::getConversionFactor($unitUsed, $this->ingredient->unit);
+            $quantity = $quantity * $factor;
+        }
+
+        return round($quantity, 4);
+    }
 }
+
