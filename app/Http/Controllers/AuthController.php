@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -17,15 +18,28 @@ class AuthController extends Controller
     }
 
     // Memproses data login
+    // Memproses data login
     public function authenticate(Request $request)
     {
         $credentials = $request->validate([
-            'username' => ['required'],
+            'username' => ['required', 'string'],
             'password' => ['required'],
         ]);
 
+        // FIX #6: 5 percobaan gagal per username+IP dalam 60 detik
+        $throttleKey = strtolower($request->input('username')).'|'.$request->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $detik = RateLimiter::availableIn($throttleKey);
+
+            return back()->withErrors([
+                'username' => "Terlalu banyak percobaan login. Coba lagi dalam {$detik} detik.",
+            ])->onlyInput('username');
+        }
+
         // Cek kecocokan username dan password di database
         if (Auth::attempt($credentials)) {
+            RateLimiter::clear($throttleKey);
             $request->session()->regenerate();
 
             // Jika berhasil, arahkan ke halaman kasir
@@ -33,6 +47,8 @@ class AuthController extends Controller
         }
 
         // Jika gagal, kembalikan ke halaman login dengan pesan error
+        RateLimiter::hit($throttleKey, 60);
+
         return back()->withErrors([
             'username' => 'Username atau password salah.',
         ])->onlyInput('username');
@@ -73,19 +89,24 @@ class AuthController extends Controller
             // Step 1: Validasi username, kembalikan pertanyaan keamanan
             $request->validate(['username' => 'required|string']);
 
+            $throttleKey = 'password-reset:'.strtolower($request->input('username')).'|'.$request->ip();
+
+            if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+                $detik = RateLimiter::availableIn($throttleKey);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => "Terlalu banyak percobaan. Coba lagi dalam {$detik} detik.",
+                ], 429);
+            }
+            RateLimiter::hit($throttleKey, 300); // jeda 5 menit per percobaan
+
             $user = User::where('username', $request->username)->first();
 
-            if (! $user) {
+            if (! $user || ! $user->security_question || ! $user->security_answer) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Username tidak ditemukan dalam sistem.',
-                ], 422);
-            }
-
-            if (! $user->security_question || ! $user->security_answer) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Akun ini belum memiliki pertanyaan keamanan. Silakan hubungi Administrator untuk reset password.',
+                    'message' => 'Reset password mandiri tidak tersedia untuk akun ini. Hubungi Administrator.',
                 ], 422);
             }
 
@@ -111,21 +132,36 @@ class AuthController extends Controller
                 ], 422);
             }
 
+            $throttleKey = 'password-answer:'.strtolower($username).'|'.$request->ip();
+
+            if (RateLimiter::tooManyAttempts($throttleKey, 3)) {
+                $detik = RateLimiter::availableIn($throttleKey);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => "Terlalu banyak percobaan jawaban salah. Coba lagi dalam {$detik} detik.",
+                ], 429);
+            }
+
             $user = User::where('username', $username)->first();
             if (! $user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'User tidak ditemukan.',
+                    'message' => 'Sesi tidak valid. Silakan ulangi dari awal.',
                 ], 422);
             }
 
             // Cek jawaban (case-insensitive) — jawaban di-lowercase sebelum dibandingkan
             if (! Hash::check(strtolower(trim($request->security_answer)), $user->security_answer)) {
+                RateLimiter::hit($throttleKey, 600); // jeda 10 menit setelah jawaban salah
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Jawaban keamanan salah. Silakan coba lagi.',
                 ], 422);
             }
+
+            RateLimiter::clear($throttleKey);
 
             // Generate reset token sementara (berlaku 10 menit)
             $resetToken = Str::random(40);

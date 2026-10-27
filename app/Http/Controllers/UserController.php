@@ -83,10 +83,10 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Akun pengguna berhasil diperbarui.');
     }
 
-    public function destroy(User $user)
+    public function destroy(Request $request, User $user)
     {
         // Cegah user menghapus akunnya sendiri yang sedang dipakai login
-        if ($user->id === auth()->id()) {
+        if ($user->id === $request->user()->id) {
             return back()->with('error', 'Anda tidak bisa menghapus akun yang sedang Anda gunakan!');
         }
 

@@ -16,11 +16,10 @@ class BukuKasHarianController extends Controller
     {
         $today = date('Y-m-d');
 
-        // Cek apakah hari ini sudah melakukan tutup buku
-        $alreadyClosed = BukuKasHarian::with('user')->where('date', $today)->first();
-
-        // Mengambil semua riwayat tutup buku kasir diurutkan dari teranyar
-        $historyLogs = BukuKasHarian::with('user')->latest('date')->get();
+        $alreadyClosed = BukuKasHarian::with(['user' => fn ($query) => $query->withTrashed()])
+            ->where('date', $today)->first();
+        $historyLogs = BukuKasHarian::with(['user' => fn ($query) => $query->withTrashed()])
+            ->latest('date')->get();
 
         // Variabel kalkulasi real-time sistem hari ini (jika belum ditutup)
         $systemCashSales = 0;

@@ -24,14 +24,14 @@
     <div>
         <p style="margin: 2px 0;">INV  : {{ $order->invoice_number }}</p>
         <p style="margin: 2px 0;">TGL  : {{ $order->created_at->format('d/m/Y H:i') }}</p>
-        <p style="margin: 2px 0;">KASIR: {{ $order->user->name }}</p>
+        <p style="margin: 2px 0;">KASIR: {{ $order->user->name ?? '-' }}</p>
     </div>
     <hr>
     
     <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
         @foreach($order->orderDetails as $detail)
         <tr>
-            <td colspan="3" class="fw-bold">{{ $detail->item->name }}</td>
+            <td colspan="3" class="fw-bold">{{ $detail->item->name ?? '(item terhapus)' }}</td>
         </tr>
         <tr>
             <td>{{ $detail->quantity }}x</td>

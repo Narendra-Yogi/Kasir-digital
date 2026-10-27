@@ -18,7 +18,7 @@
                 </div>
                 <div>
                     <h3 class="font-display text-lg font-semibold tracking-tight">Buku kas hari ini telah ditutup</h3>
-                    <p class="text-[13px] text-[#8a8179] mt-0.5">Rekonsiliasi kas dikunci · Petugas {{ $alreadyClosed->user->name }} · {{ $alreadyClosed->created_at->format('H:i') }} WIB · {{ \Carbon\Carbon::parse($alreadyClosed->date)->translatedFormat('d F Y') }}</p>
+                    <p class="text-[13px] text-[#8a8179] mt-0.5">Rekonsiliasi kas dikunci · Petugas {{ $alreadyClosed->user->name ?? '-' }} · {{ $alreadyClosed->created_at->format('H:i') }} WIB · {{ \Carbon\Carbon::parse($alreadyClosed->date)->translatedFormat('d F Y') }}</p>
                 </div>
             </div>
             <div class="flex gap-4 shrink-0 w-full md:w-auto items-center">
@@ -231,7 +231,7 @@
                                     {{ \Carbon\Carbon::parse($log->date)->translatedFormat('d M Y') }}
                                 </td>
                                 <td class="px-6 py-3.5 font-medium whitespace-nowrap">
-                                    {{ $log->user->name }}
+                                    {{ $log->user->name ?? '-'}}
                                 </td>
                                 <td class="px-6 py-3.5 text-[#57504a] whitespace-nowrap tnum">
                                     Rp {{ number_format($log->starting_cash, 0, ',', '.') }}

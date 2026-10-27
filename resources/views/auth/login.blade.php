@@ -60,8 +60,19 @@
             <p class="text-sm text-[#8a8179] mt-1.5">Masuk untuk membuka kasir dan laporan hari ini.</p>
 
             @if ($errors->any())
+                @php
+                    $pesan = $errors->first();
+                    $angka = null;
+                    if (preg_match('/dalam (\d+) detik/', $pesan, $m)) {
+                        $angka = (int) $m[1];
+                    }
+                @endphp
                 <div class="bg-[#fdf0ee] text-[#931b13] px-4 py-3 rounded-[10px] text-sm mt-6 border border-[#f2b3a6] font-medium">
-                    {{ $errors->first() }}
+                    @if ($angka !== null)
+                        Terlalu banyak percobaan login. Coba lagi dalam <span data-countdown="{{ $angka }}">{{ $angka }}</span> detik.
+                    @else
+                        {{ $pesan }}
+                    @endif
                 </div>
             @endif
 
@@ -101,6 +112,25 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        (function () {
+            const el = document.querySelector('[data-countdown]');
+            if (! el) return;
+
+            let detik = parseInt(el.textContent, 10) || 0;
+            const tombol = document.querySelector('form button[type="submit"]');
+            if (tombol) tombol.disabled = true;
+
+            const timer = setInterval(() => {
+                detik = Math.max(0, detik - 1);
+                el.textContent = detik;
+
+                if (detik === 0) {
+                    clearInterval(timer);
+                    if (tombol) tombol.disabled = false;
+                }
+            }, 1000);
+        })();
+
         function togglePassword() {
             const passwordInput = document.getElementById('password');
             const eyeIcon = document.getElementById('eye-icon');
