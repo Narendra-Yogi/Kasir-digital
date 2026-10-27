@@ -33,10 +33,6 @@
         .text-muted { color: #94a3b8; font-style: italic; }
         .text-orange { color: #ea580c; }
 
-        .two-col { display: table; width: 100%; }
-        .col-half { display: table-cell; width: 49%; vertical-align: top; }
-        .col-gap { display: table-cell; width: 2%; }
-
         .profit-box { background: #f0fdf4; border: 2px solid #16a34a; border-radius: 8px; padding: 15px 20px; margin-top: 20px; display: table; width: 100%; }
         .profit-box.loss { background: #fef2f2; border-color: #ef4444; }
         .profit-left { display: table-cell; vertical-align: middle; }
@@ -68,6 +64,11 @@
             </div>
         </div>
 
+        @php
+            $hasilBersih = $hasilBersih ?? $labaBersih ?? 0;
+            $labelKat = ['belanja_harian' => 'Belanja Harian', 'operasional' => 'Operasional', 'gaji' => 'Gaji', 'lainnya' => 'Lainnya', 'bahan' => 'Belanja Harian', 'logistik' => 'Operasional'];
+        @endphp
+
         <!-- I. Ringkasan Pemasukan -->
         <div class="section">
             <div class="section-title">I. RINGKASAN PEMASUKAN</div>
@@ -91,90 +92,58 @@
             </table>
         </div>
 
-        <!-- II. Stok Bahan Baku -->
+        <!-- II. Stok Menu -->
         <div class="section">
-            <div class="section-title">II. LAPORAN STOK BAHAN BAKU</div>
+            <div class="section-title">II. STOK MENU MENIPIS</div>
             <table>
                 <thead>
                     <tr>
-                        <th class="text-left">Item Bahan</th>
-                        <th class="text-center">Stok Masuk</th>
-                        <th class="text-center">Stok Awal</th>
-                        <th class="text-center">Terjual</th>
-                        <th class="text-center" style="background: #fff7ed;">Sisa Stok</th>
+                        <th class="text-left">Menu</th>
+                        <th class="text-center">Sisa</th>
+                        <th class="text-center">Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($stokBarang as $inv)
+                    @forelse($stokMenipis ?? [] as $item)
                     <tr>
-                        <td class="font-bold" style="text-transform: uppercase; font-size: 8px;">{{ $inv->item_name }}</td>
-                        <td class="text-center">{{ $inv->new_stock }}</td>
-                        <td class="text-center">{{ $inv->old_stock }}</td>
-                        <td class="text-center text-red">-{{ $inv->sold }}</td>
-                        <td class="text-center font-bold {{ $inv->remaining_stock < 5 ? 'text-red' : '' }}" style="background: #fffbf5;">
-                            {{ $inv->remaining_stock }}
-                            @if($inv->remaining_stock < 5) ⚠ @endif
-                        </td>
+                        <td class="font-bold" style="font-size: 8px;">{{ $item->name }}</td>
+                        <td class="text-center">{{ $item->stock }}</td>
+                        <td class="text-center">{{ $item->stock <= 0 ? 'Habis' : 'Menipis' }}</td>
                     </tr>
                     @empty
-                    <tr><td colspan="5" class="text-center text-muted" style="padding: 12px;">Data stok belum diinput.</td></tr>
+                    <tr><td colspan="3" class="text-center text-muted" style="padding: 12px;">Semua stok menu aman.</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
-        <!-- III & IV. Pengeluaran -->
-        @php
-            $totalBahan = 0;
-            $totalLogistik = 0;
-        @endphp
-        <div class="two-col">
-            <div class="col-half">
-                <div class="section-title">III. PENGELUARAN BAHAN</div>
-                <table>
-                    <thead><tr><th class="text-left">Item</th><th class="text-right" style="width: 100px;">Harga</th></tr></thead>
-                    <tbody>
-                        @foreach($pengeluaran->where('category', 'bahan') as $exp)
-                        <tr>
-                            <td style="font-size: 8px;">{{ $exp->item_name }}</td>
-                            <td class="text-right" style="font-size: 8px;">Rp {{ number_format($exp->amount, 0, ',', '.') }}</td>
-                        </tr>
-                        @php $totalBahan += $exp->amount; @endphp
-                        @endforeach
-                        <tr class="total-row">
-                            <td class="text-right">TOTAL</td>
-                            <td class="text-right text-red" style="font-size: 9px;">Rp {{ number_format($totalBahan, 0, ',', '.') }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="col-gap"></div>
-            <div class="col-half">
-                <div class="section-title">IV. PENGELUARAN LOGISTIK</div>
-                <table>
-                    <thead><tr><th class="text-left">Item</th><th class="text-right" style="width: 100px;">Harga</th></tr></thead>
-                    <tbody>
-                        @foreach($pengeluaran->where('category', 'logistik') as $exp)
-                        <tr>
-                            <td style="font-size: 8px;">{{ $exp->item_name }}</td>
-                            <td class="text-right" style="font-size: 8px;">Rp {{ number_format($exp->amount, 0, ',', '.') }}</td>
-                        </tr>
-                        @php $totalLogistik += $exp->amount; @endphp
-                        @endforeach
-                        <tr class="total-row">
-                            <td class="text-right">TOTAL</td>
-                            <td class="text-right text-red" style="font-size: 9px;">Rp {{ number_format($totalLogistik, 0, ',', '.') }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <!-- III. Pengeluaran -->
+        <div class="section">
+            <div class="section-title">III. PENGELUARAN HARI INI</div>
+            <table>
+                <thead><tr><th class="text-left">Item / keperluan (kategori)</th><th class="text-right" style="width: 120px;">Harga</th></tr></thead>
+                <tbody>
+                    @forelse($pengeluaran as $exp)
+                    <tr>
+                        <td style="font-size: 8px;">{{ $exp->item_name }} ({{ $labelKat[$exp->category] ?? $exp->category }})</td>
+                        <td class="text-right" style="font-size: 8px;">Rp {{ number_format($exp->amount, 0, ',', '.') }}</td>
+                    </tr>
+                    @empty
+                    <tr><td colspan="2" class="text-center text-muted">Tidak ada pengeluaran.</td></tr>
+                    @endforelse
+                    <tr class="total-row">
+                        <td class="text-right">TOTAL</td>
+                        <td class="text-right text-red" style="font-size: 9px;">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
-        <!-- Profit Box -->
-        <div class="profit-box {{ $labaBersih < 0 ? 'loss' : '' }}">
+        <!-- Hasil Box -->
+        <div class="profit-box {{ $hasilBersih < 0 ? 'loss' : '' }}">
             <div class="profit-left">
-                <div class="profit-label">Total Laba Bersih Hari Ini</div>
-                <div class="profit-value {{ $labaBersih < 0 ? 'loss' : '' }}">Rp {{ number_format($labaBersih, 0, ',', '.') }}</div>
+                <div class="profit-label">Hasil Bersih Hari Ini ({{ $hasilBersih >= 0 ? 'Untung' : 'Rugi' }})</div>
+                <div class="profit-value {{ $hasilBersih < 0 ? 'loss' : '' }}">Rp {{ number_format($hasilBersih, 0, ',', '.') }}</div>
             </div>
             <div class="profit-right">
                 <div class="profit-detail">Pemasukan: Rp {{ number_format($totalPenjualan, 0, ',', '.') }}</div>

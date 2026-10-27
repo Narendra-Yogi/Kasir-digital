@@ -79,14 +79,14 @@
             </div>
             <div class="summary-card">
                 <div class="summary-box bahan">
-                    <div class="summary-label">Bahan Baku</div>
-                    <div class="summary-value text-orange">Rp {{ number_format($totalBahan, 0, ',', '.') }}</div>
+                    <div class="summary-label">Belanja Harian</div>
+                    <div class="summary-value text-orange">Rp {{ number_format($totalBelanjaHarian ?? $totalBahan ?? 0, 0, ',', '.') }}</div>
                 </div>
             </div>
             <div class="summary-card">
                 <div class="summary-box logistik">
-                    <div class="summary-label">Logistik</div>
-                    <div class="summary-value text-blue">Rp {{ number_format($totalLogistik, 0, ',', '.') }}</div>
+                    <div class="summary-label">Operasional + Gaji</div>
+                    <div class="summary-value text-blue">Rp {{ number_format(($totalOperasional ?? $totalLogistik ?? 0) + ($totalGaji ?? 0), 0, ',', '.') }}</div>
                 </div>
             </div>
             <div class="summary-card">
@@ -119,10 +119,11 @@
                         @if($exp->notes)<br><span class="text-muted" style="font-size: 7px;">{{ $exp->notes }}</span>@endif
                     </td>
                     <td class="text-center">
-                        @if($exp->category == 'bahan')
-                            <span class="badge badge-orange">Bahan</span>
-                        @elseif($exp->category == 'logistik')
-                            <span class="badge badge-blue">Logistik</span>
+                        @php $katLabel = ['belanja_harian' => 'Belanja Harian', 'operasional' => 'Operasional', 'gaji' => 'Gaji', 'lainnya' => 'Lainnya', 'bahan' => 'Belanja Harian', 'logistik' => 'Operasional']; @endphp
+                        @if(($exp->category ?? '') == 'belanja_harian' || ($exp->category ?? '') == 'bahan')
+                            <span class="badge badge-orange">Belanja Harian</span>
+                        @elseif(($exp->category ?? '') == 'operasional' || ($exp->category ?? '') == 'logistik' || ($exp->category ?? '') == 'gaji')
+                            <span class="badge badge-blue">{{ $katLabel[$exp->category] ?? $exp->category }}</span>
                         @else
                             <span class="badge badge-gray">Lainnya</span>
                         @endif

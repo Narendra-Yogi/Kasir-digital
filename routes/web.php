@@ -1,17 +1,15 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PosController;
-use App\Http\Controllers\ItemController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\BukuKasHarianController;
-use App\Http\Controllers\InventoryController;
-use App\Http\Controllers\IngredientController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ItemController;
+use App\Http\Controllers\PengeluaranController;
+use App\Http\Controllers\PosController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Route;
 
 // --- ROUTE AUTENTIKASI ---
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -45,9 +43,6 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.resetPassword');
         Route::resource('categories', CategoryController::class);
         Route::resource('items', ItemController::class);
-        Route::resource('ingredients', IngredientController::class);
-        Route::post('ingredients/{ingredient}/restock', [IngredientController::class, 'restock'])->name('ingredients.restock');
-        Route::get('/api/ingredients', [IngredientController::class, 'apiList'])->name('api.ingredients');
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/rekap', [ReportController::class, 'rekap'])->name('reports.rekap');
         Route::get('/reports/daily', [ReportController::class, 'dailyReport'])->name('reports.daily');
@@ -58,9 +53,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reports/daily/export-pdf', [ReportController::class, 'exportDailyPdf'])->name('reports.exportDailyPdf');
         Route::get('/reports/rekap/export-pdf', [ReportController::class, 'exportRekapPdf'])->name('reports.exportRekapPdf');
         Route::get('/pengeluaran/export-pdf', [PengeluaranController::class, 'exportPdf'])->name('pengeluaran.exportPdf');
-        Route::get('/inventories/export-pdf', [InventoryController::class, 'exportPdf'])->name('inventories.exportPdf');
 
         Route::resource('pengeluaran', PengeluaranController::class);
-        Route::resource('inventories', InventoryController::class);
     });
 });

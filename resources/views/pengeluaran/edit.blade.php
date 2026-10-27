@@ -12,7 +12,7 @@
         </a>
     </div>
 
-    <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+    <div class="card card-pad rise">
         <form action="{{ route('pengeluaran.update', $pengeluaran->id) }}" method="POST" class="space-y-6">
             @csrf
             @method('PUT')
@@ -25,7 +25,9 @@
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Kategori</label>
                     <select name="category" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-brand-500 outline-none cursor-pointer" required>
-                        <option value="logistik" {{ $pengeluaran->category == 'logistik' ? 'selected' : '' }}>Logistik</option>
+                        <option value="belanja_harian" {{ $pengeluaran->category == 'belanja_harian' ? 'selected' : '' }}>Belanja Harian</option>
+                        <option value="operasional" {{ $pengeluaran->category == 'operasional' ? 'selected' : '' }}>Operasional</option>
+                        <option value="gaji" {{ $pengeluaran->category == 'gaji' ? 'selected' : '' }}>Gaji</option>
                         <option value="lainnya" {{ $pengeluaran->category == 'lainnya' ? 'selected' : '' }}>Lainnya</option>
                     </select>
                 </div>
@@ -48,7 +50,7 @@
 
             <div class="pt-4 border-t border-gray-100 flex gap-3">
                 <a href="{{ route('pengeluaran.index') }}" class="flex-1 text-center py-3.5 rounded-xl font-bold text-gray-400 hover:bg-gray-50 transition-all">Batal</a>
-                <button type="submit" class="flex-1 bg-brand-700 hover:bg-brand-800 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-brand-700/20 transition-all cursor-pointer">Simpan Perubahan</button>
+                <button type="submit" class="flex-1 btn-ink py-3 text-sm cursor-pointer">Simpan Perubahan</button>
             </div>
         </form>
     </div>

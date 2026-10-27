@@ -4,48 +4,41 @@
 @section('page_title', 'Buku Kas Harian')
 
 @section('content')
-<div class="space-y-8 animate-fade-in-up">
-    
+<div class="space-y-6 rise">
+
     {{-- ========== BAGIAN ATAS: FORM PENUTUPAN / STATUS HARI INI ========== --}}
     @if($alreadyClosed)
         {{-- Jika Hari Ini Sudah Tutup Buku --}}
-        <div class="bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-100 rounded-3xl p-6 lg:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
-            <div class="flex items-center gap-5">
-                <div class="w-14 h-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+        <div class="card card-pad flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-[#1c1410] text-[#f7f1e6] flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold text-gray-900 leading-snug">Buku Kas Hari Ini Telah Ditutup</h3>
-                    <p class="text-sm text-gray-500 mt-1">Laporan rekonsiliasi kas telah dikunci dengan sukses.</p>
-                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-emerald-700 font-bold mt-2">
-                        <span>Petugas: {{ $alreadyClosed->user->name }}</span>
-                        <span class="text-emerald-300">&bull;</span>
-                        <span>Waktu: {{ $alreadyClosed->created_at->format('H:i') }} WIB</span>
-                        <span class="text-emerald-300">&bull;</span>
-                        <span>Tanggal: {{ \Carbon\Carbon::parse($alreadyClosed->date)->translatedFormat('d F Y') }}</span>
-                    </div>
+                    <h3 class="font-display text-lg font-semibold tracking-tight">Buku kas hari ini telah ditutup</h3>
+                    <p class="text-[13px] text-[#8a8179] mt-0.5">Rekonsiliasi kas dikunci · Petugas {{ $alreadyClosed->user->name }} · {{ $alreadyClosed->created_at->format('H:i') }} WIB · {{ \Carbon\Carbon::parse($alreadyClosed->date)->translatedFormat('d F Y') }}</p>
                 </div>
             </div>
-            <div class="flex gap-4 shrink-0 w-full md:w-auto">
-                <div class="bg-white/80 border border-emerald-100 rounded-2xl px-5 py-3 text-center flex-1 md:flex-none">
-                    <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Uang Fisik Aktual</span>
-                    <span class="text-base font-black text-emerald-600">Rp {{ number_format($alreadyClosed->actual_cash, 0, ',', '.') }}</span>
+            <div class="flex gap-4 shrink-0 w-full md:w-auto items-center">
+                <div class="px-4 py-2.5 text-center flex-1 md:flex-none border-l border-[#e8e0d3]">
+                    <span class="block text-xs text-[#8a8179]">Uang fisik aktual</span>
+                    <span class="font-display text-lg font-semibold tnum">Rp {{ number_format($alreadyClosed->actual_cash, 0, ',', '.') }}</span>
                 </div>
-                <div class="bg-white/80 border border-emerald-100 rounded-2xl px-5 py-3 text-center flex-1 md:flex-none">
-                    <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Selisih Kas</span>
+                <div class="px-4 py-2.5 text-center flex-1 md:flex-none border-l border-[#e8e0d3]">
+                    <span class="block text-xs text-[#8a8179]">Selisih kas</span>
                     @if($alreadyClosed->discrepancy == 0)
-                        <span class="text-base font-black text-emerald-600">Rp 0 (Cocok)</span>
+                        <span class="font-display text-lg font-semibold">Rp 0</span>
                     @elseif($alreadyClosed->discrepancy > 0)
-                        <span class="text-base font-black text-amber-600">+Rp {{ number_format($alreadyClosed->discrepancy, 0, ',', '.') }}</span>
+                        <span class="font-display text-lg font-semibold text-[#7a5c14] tnum">+Rp {{ number_format($alreadyClosed->discrepancy, 0, ',', '.') }}</span>
                     @else
-                        <span class="text-base font-black text-red-600">-Rp {{ number_format(abs($alreadyClosed->discrepancy), 0, ',', '.') }}</span>
+                        <span class="font-display text-lg font-semibold text-[#931b13] tnum">−Rp {{ number_format(abs($alreadyClosed->discrepancy), 0, ',', '.') }}</span>
                     @endif
                 </div>
                 @if(auth()->user()->role === 'admin')
-                <button onclick="openEditModal()" class="flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm transition-colors shadow-md shadow-brand-600/20 shrink-0">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                <button onclick="openEditModal()" class="btn-outline !text-[13px]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                     Edit
                 </button>
                 @endif
@@ -53,41 +46,27 @@
         </div>
     @else
         {{-- Jika Hari Ini Belum Tutup Buku --}}
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
             {{-- Bagian Kiri: Ringkasan Sistem Real-time --}}
-            <div class="lg:col-span-5 space-y-6">
-                <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-5">
-                    <h3 class="text-base font-black text-gray-900 border-b border-gray-50 pb-3 flex items-center gap-2">
-                        <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2"></path></svg>
-                        Ringkasan Sistem Hari Ini
-                    </h3>
-                    
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center p-3 rounded-2xl bg-gray-50/50">
-                            <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-lg bg-green-50 text-green-600 flex items-center justify-center font-bold text-sm shrink-0">Rp</span>
-                                <span class="text-xs font-semibold text-gray-500">Penjualan Tunai</span>
-                            </div>
-                            <span class="text-sm font-bold text-gray-900" id="sys-cash-sales" data-value="{{ $systemCashSales }}">Rp {{ number_format($systemCashSales, 0, ',', '.') }}</span>
+            <div class="lg:col-span-5">
+                <div class="card card-pad">
+                    <h3 class="font-display text-[17px] font-semibold tracking-tight pb-3 mb-4 border-b border-[#f1ebe0]">Ringkasan sistem hari ini</h3>
+
+                    <div class="divide-y divide-[#f1ebe0]">
+                        <div class="flex justify-between items-center py-3">
+                            <span class="text-[13px] text-[#57504a]">Penjualan tunai</span>
+                            <span class="text-sm font-semibold tnum" id="sys-cash-sales" data-value="{{ $systemCashSales }}">Rp {{ number_format($systemCashSales, 0, ',', '.') }}</span>
                         </div>
-                        
-                        <div class="flex justify-between items-center p-3 rounded-2xl bg-gray-50/50">
-                            <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0">QR</span>
-                                <span class="text-xs font-semibold text-gray-500">Penjualan QRIS</span>
-                            </div>
-                            <span class="text-sm font-bold text-gray-900">Rp {{ number_format($systemQrisSales, 0, ',', '.') }}</span>
+
+                        <div class="flex justify-between items-center py-3">
+                            <span class="text-[13px] text-[#57504a]">Penjualan QRIS</span>
+                            <span class="text-sm font-semibold tnum">Rp {{ number_format($systemQrisSales, 0, ',', '.') }}</span>
                         </div>
-                        
-                        <div class="flex justify-between items-center p-3 rounded-2xl bg-gray-50/50">
-                            <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center shrink-0">
-                                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                </span>
-                                <span class="text-xs font-semibold text-gray-500">Pengeluaran Toko</span>
-                            </div>
-                            <span class="text-sm font-bold text-red-600" id="sys-expenses" data-value="{{ $systemExpenses }}">-Rp {{ number_format($systemExpenses, 0, ',', '.') }}</span>
+
+                        <div class="flex justify-between items-center py-3">
+                            <span class="text-[13px] text-[#57504a]">Pengeluaran toko</span>
+                            <span class="text-sm font-semibold tnum" id="sys-expenses" data-value="{{ $systemExpenses }}">−Rp {{ number_format($systemExpenses, 0, ',', '.') }}</span>
                         </div>
                     </div>
                 </div>
@@ -95,54 +74,52 @@
 
             {{-- Bagian Kanan: Form Pengisian Tutup Kasir --}}
             <div class="lg:col-span-7">
-                <div class="bg-white rounded-3xl p-6 lg:p-8 border border-gray-100 shadow-sm">
+                <div class="card card-pad">
                     <form action="{{ route('buku-kas-harian.store') }}" method="POST" id="closing-form">
                         @csrf
-                        <div class="space-y-6">
-                            <h3 class="text-base font-black text-gray-900 border-b border-gray-50 pb-3 flex items-center gap-2">
-                                <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                Rekonsiliasi Kas & Tutup Buku
+                        <div class="space-y-5">
+                            <h3 class="font-display text-[17px] font-semibold tracking-tight pb-3 border-b border-[#f1ebe0]">
+                                Rekonsiliasi kas & tutup buku
                             </h3>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Modal Awal Kasir (Rupiah)</label>
+                                    <label class="block text-[13px] text-[#57504a] mb-1.5">Modal awal laci / uang awal (Rp)</label>
                                     <div class="relative">
-                                        <input type="text" name="starting_cash" id="starting_cash" value="{{ number_format($startingCash, 0, ',', '.') }}" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-100 text-gray-900 font-bold text-sm cursor-not-allowed" readonly>
-                                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">Otomatis dari Pengeluaran</span>
+                                        <input type="text" name="starting_cash" id="starting_cash" value="0" class="field font-semibold tnum" placeholder="Contoh: 100.000" required oninput="formatThousandsInput(this); calculateClosingLive()">
                                     </div>
-                                    <p class="text-[10px] text-gray-400 mt-1.5 leading-relaxed">Diambil otomatis dari total pengeluaran toko hari ini.</p>
+                                    <p class="text-xs text-[#8a8179] mt-1.5">Isi manual: uang yang ada di laci sebelum buka. Rumus: awal + tunai − pengeluaran = seharusnya di laci.</p>
                                 </div>
-                                
+
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Uang Fisik Laci (Rupiah)</label>
-                                    <input type="text" name="actual_cash" id="actual_cash" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-brand-500 transition-colors font-bold text-gray-900 text-sm" placeholder="Masukkan uang di laci" required oninput="formatThousandsInput(this); calculateClosingLive()">
+                                    <label class="block text-[13px] text-[#57504a] mb-1.5">Uang fisik di laci (Rp)</label>
+                                    <input type="text" name="actual_cash" id="actual_cash" class="field font-semibold tnum" placeholder="Hitung uang di laci" required oninput="formatThousandsInput(this); calculateClosingLive()">
                                 </div>
                             </div>
-                            
+
                             <div>
-                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Catatan Kejadian Penting Hari Ini</label>
-                                <textarea name="notes" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-brand-500 transition-colors text-sm text-gray-800" placeholder="Contoh: Aman lancar, beli tambahan cabai Rp 15.000 dengan uang laci, kembalian kurang Rp 2.000..."></textarea>
+                                <label class="block text-[13px] text-[#57504a] mb-1.5">Catatan hari ini</label>
+                                <textarea name="notes" rows="3" class="field" placeholder="Contoh: ramai lancar, beli cabai Rp 15.000 dari laci…"></textarea>
                             </div>
-                            
+
                             {{-- Kalkulator Hasil Real-time (JS Live) --}}
-                            <div class="p-4 rounded-2xl bg-gray-50 border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs font-bold">
+                            <div class="px-4 py-3.5 rounded-[10px] bg-[#f7f2e9] border border-[#e8e0d3] flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                                 <div>
-                                    <span class="text-gray-400 block uppercase tracking-wider">Estimasi Kas Sistem</span>
-                                    <span class="text-sm font-black text-gray-800" id="display-expected">Rp {{ number_format($startingCash + $systemCashSales - $systemExpenses, 0, ',', '.') }}</span>
+                                    <span class="text-xs text-[#8a8179] block">Estimasi kas sistem</span>
+                                    <span class="font-display text-[17px] font-semibold tnum" id="display-expected">Rp 0</span>
                                 </div>
                                 <div>
-                                    <span class="text-gray-400 block uppercase tracking-wider">Uang Fisik Kasir</span>
-                                    <span class="text-sm font-black text-gray-800" id="display-actual">Rp 0</span>
+                                    <span class="text-xs text-[#8a8179] block">Uang fisik kasir</span>
+                                    <span class="font-display text-[17px] font-semibold tnum" id="display-actual">Rp 0</span>
                                 </div>
                                 <div class="md:text-right">
-                                    <span class="text-gray-400 block uppercase tracking-wider">Analisis Selisih</span>
-                                    <span class="text-sm font-black text-emerald-600" id="display-discrepancy">Rp 0 (Cocok)</span>
+                                    <span class="text-xs text-[#8a8179] block">Selisih</span>
+                                    <span class="font-display text-[17px] font-semibold" id="display-discrepancy">Rp 0</span>
                                 </div>
                             </div>
-                            
-                            <button type="submit" class="w-full bg-brand-700 hover:bg-brand-800 text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-700/20 transition-all cursor-pointer text-center text-sm">
-                                Simpan & Tutup Buku Hari Ini
+
+                            <button type="submit" class="btn-ink w-full py-3.5 text-sm">
+                                Simpan & tutup buku hari ini
                             </button>
                         </div>
                     </form>
@@ -159,37 +136,37 @@
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeEditModal()"></div>
         
         {{-- Modal Card --}}
-        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg p-8 space-y-6 scale-95 transition-transform duration-200" id="edit-modal-card">
-            
+        <div class="relative bg-[#fffdf9] rounded-[16px] border border-[#e8e0d3] w-full max-w-lg p-7 space-y-5 scale-95 transition-transform duration-200" id="edit-modal-card">
+
             {{-- Header --}}
             <div class="flex items-start justify-between">
                 <div>
-                    <h3 class="text-lg font-black text-gray-900">Edit Buku Kas Harian</h3>
-                    <p class="text-xs text-gray-400 mt-1">Tanggal: {{ \Carbon\Carbon::parse($alreadyClosed->date)->translatedFormat('d F Y') }}</p>
+                    <h3 class="font-display text-lg font-semibold tracking-tight">Edit buku kas harian</h3>
+                    <p class="text-xs text-[#8a8179] mt-1">Tanggal: {{ \Carbon\Carbon::parse($alreadyClosed->date)->translatedFormat('d F Y') }}</p>
                 </div>
-                <button onclick="closeEditModal()" class="p-2 rounded-xl hover:bg-gray-100 text-gray-400 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <button onclick="closeEditModal()" class="icon-btn" aria-label="Tutup">
+                    <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
 
             {{-- Ringkasan Data Sistem (readonly) --}}
-            <div class="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-2 text-xs">
-                <p class="font-bold text-gray-400 uppercase tracking-wider mb-2">Data Sistem (Tidak Bisa Diubah)</p>
+            <div class="px-4 py-3.5 rounded-[10px] bg-[#f7f2e9] border border-[#e8e0d3] space-y-2 text-[13px]">
+                <p class="text-xs text-[#8a8179] mb-1">Data sistem (tidak bisa diubah)</p>
                 <div class="flex justify-between">
-                    <span class="text-gray-500">Modal Awal</span>
-                    <span class="font-bold text-gray-800">Rp {{ number_format($alreadyClosed->starting_cash, 0, ',', '.') }}</span>
+                    <span class="text-[#57504a]">Modal awal</span>
+                    <span class="font-semibold tnum">Rp {{ number_format($alreadyClosed->starting_cash, 0, ',', '.') }}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-gray-500">Penjualan Tunai</span>
-                    <span class="font-bold text-gray-800">Rp {{ number_format($alreadyClosed->system_cash_sales, 0, ',', '.') }}</span>
+                    <span class="text-[#57504a]">Penjualan tunai</span>
+                    <span class="font-semibold tnum">Rp {{ number_format($alreadyClosed->system_cash_sales, 0, ',', '.') }}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-gray-500">Pengeluaran</span>
-                    <span class="font-bold text-red-500">-Rp {{ number_format($alreadyClosed->system_expenses, 0, ',', '.') }}</span>
+                    <span class="text-[#57504a]">Pengeluaran</span>
+                    <span class="font-semibold tnum">−Rp {{ number_format($alreadyClosed->system_expenses, 0, ',', '.') }}</span>
                 </div>
-                <div class="flex justify-between border-t border-gray-200 pt-2">
-                    <span class="text-gray-500 font-semibold">Estimasi Kas Sistem</span>
-                    <span class="font-black text-gray-900">Rp {{ number_format($alreadyClosed->starting_cash + $alreadyClosed->system_cash_sales - $alreadyClosed->system_expenses, 0, ',', '.') }}</span>
+                <div class="flex justify-between border-t border-[#e8e0d3] pt-2">
+                    <span class="font-medium">Estimasi kas sistem</span>
+                    <span class="font-semibold tnum">Rp {{ number_format($alreadyClosed->starting_cash + $alreadyClosed->system_cash_sales - $alreadyClosed->system_expenses, 0, ',', '.') }}</span>
                 </div>
             </div>
 
@@ -197,29 +174,29 @@
             <form action="{{ route('buku-kas-harian.update', $alreadyClosed->id) }}" method="POST" id="edit-kas-form">
                 @csrf
                 @method('PUT')
-                <div class="space-y-5">
-                    
+                <div class="space-y-4">
+
                     <div>
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Uang Fisik Laci (Rupiah)</label>
+                        <label class="block text-[13px] text-[#57504a] mb-1.5">Uang fisik di laci (Rp)</label>
                         <input type="text" name="actual_cash" id="edit-actual-cash"
                             value="{{ number_format($alreadyClosed->actual_cash, 0, ',', '.') }}"
-                            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-brand-500 transition-colors font-bold text-gray-900 text-sm"
+                            class="field font-semibold tnum"
                             oninput="formatThousandsInput(this); updateEditDiscrepancy()" required>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Catatan</label>
-                        <textarea name="notes" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-brand-500 transition-colors text-sm text-gray-800">{{ $alreadyClosed->notes }}</textarea>
+                        <label class="block text-[13px] text-[#57504a] mb-1.5">Catatan</label>
+                        <textarea name="notes" rows="3" class="field">{{ $alreadyClosed->notes }}</textarea>
                     </div>
 
                     {{-- Preview Selisih Baru --}}
-                    <div class="p-3 rounded-xl bg-gray-50 border border-gray-100 flex justify-between items-center">
-                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Preview Selisih Baru</span>
-                        <span class="text-sm font-black" id="edit-discrepancy-display">Rp 0 (Cocok)</span>
+                    <div class="px-4 py-3 rounded-[10px] bg-[#f7f2e9] border border-[#e8e0d3] flex justify-between items-center">
+                        <span class="text-xs text-[#8a8179]">Preview selisih baru</span>
+                        <span class="font-display text-[17px] font-semibold" id="edit-discrepancy-display">Rp 0</span>
                     </div>
 
-                    <button type="submit" class="w-full bg-brand-700 hover:bg-brand-800 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-brand-700/20 transition-all cursor-pointer text-sm">
-                        Simpan Perubahan
+                    <button type="submit" class="btn-ink w-full py-3 text-sm">
+                        Simpan perubahan
                     </button>
                 </div>
             </form>
@@ -228,66 +205,66 @@
     @endif
     
     {{-- ========== BAGIAN BAWAH: TABEL RIWAYAT TUTUP BUKU ========== --}}
-    <div class="space-y-4">
-        <h2 class="text-lg font-black text-gray-900">Riwayat Penutupan Kas Harian</h2>
-        
-        <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
+    <div class="space-y-3">
+        <h2 class="font-display text-lg font-semibold tracking-tight">Riwayat penutupan kas</h2>
+
+        <div class="table-shell bg-white">
             <div class="overflow-x-auto">
                 <table class="w-full text-left min-w-[900px]">
-                    <thead class="bg-gray-50 border-b border-gray-100">
+                    <thead>
                         <tr>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Tanggal</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Kasir</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Modal Awal</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Pemasukan Tunai</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Pengeluaran</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Sisa Saldo Kas</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Fisik Kasir</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Selisih</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Catatan</th>
+                            <th class="px-6 py-3.5 text-[11px] font-semibold text-[#7a7268]">Tanggal</th>
+                            <th class="px-6 py-3.5 text-[11px] font-semibold text-[#7a7268]">Kasir</th>
+                            <th class="px-6 py-3.5 text-[11px] font-semibold text-[#7a7268]">Modal awal</th>
+                            <th class="px-6 py-3.5 text-[11px] font-semibold text-[#7a7268]">Pemasukan tunai</th>
+                            <th class="px-6 py-3.5 text-[11px] font-semibold text-[#7a7268]">Pengeluaran</th>
+                            <th class="px-6 py-3.5 text-[11px] font-semibold text-[#7a7268]">Sisa saldo kas</th>
+                            <th class="px-6 py-3.5 text-[11px] font-semibold text-[#7a7268]">Fisik kasir</th>
+                            <th class="px-6 py-3.5 text-[11px] font-semibold text-[#7a7268]">Selisih</th>
+                            <th class="px-6 py-3.5 text-[11px] font-semibold text-[#7a7268]">Catatan</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 text-[13px]">
+                    <tbody class="divide-y divide-[#f1ebe0] text-[13px]">
                         @forelse($historyLogs as $log)
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4 font-bold text-gray-900 whitespace-nowrap">
+                            <tr class="table-row-hover">
+                                <td class="px-6 py-3.5 font-semibold whitespace-nowrap tnum">
                                     {{ \Carbon\Carbon::parse($log->date)->translatedFormat('d M Y') }}
                                 </td>
-                                <td class="px-6 py-4 text-gray-700 font-semibold whitespace-nowrap">
+                                <td class="px-6 py-3.5 font-medium whitespace-nowrap">
                                     {{ $log->user->name }}
                                 </td>
-                                <td class="px-6 py-4 text-gray-500 whitespace-nowrap">
+                                <td class="px-6 py-3.5 text-[#57504a] whitespace-nowrap tnum">
                                     Rp {{ number_format($log->starting_cash, 0, ',', '.') }}
                                 </td>
-                                <td class="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">
+                                <td class="px-6 py-3.5 font-medium whitespace-nowrap tnum">
                                     Rp {{ number_format($log->system_cash_sales, 0, ',', '.') }}
-                                    <span class="block text-[10px] text-gray-400 font-medium">QRIS: Rp {{ number_format($log->system_qris_sales, 0, ',', '.') }}</span>
+                                    <span class="block text-[11px] text-[#8a8179] font-normal">QRIS: Rp {{ number_format($log->system_qris_sales, 0, ',', '.') }}</span>
                                 </td>
-                                <td class="px-6 py-4 text-red-500 whitespace-nowrap">
-                                    -Rp {{ number_format($log->system_expenses, 0, ',', '.') }}
+                                <td class="px-6 py-3.5 whitespace-nowrap tnum">
+                                    −Rp {{ number_format($log->system_expenses, 0, ',', '.') }}
                                 </td>
-                                <td class="px-6 py-4 font-bold text-gray-700 whitespace-nowrap">
+                                <td class="px-6 py-3.5 font-medium whitespace-nowrap tnum">
                                     Rp {{ number_format($log->starting_cash + $log->system_cash_sales - $log->system_expenses, 0, ',', '.') }}
                                 </td>
-                                <td class="px-6 py-4 font-black text-gray-900 whitespace-nowrap">
+                                <td class="px-6 py-3.5 font-semibold whitespace-nowrap tnum">
                                     Rp {{ number_format($log->actual_cash, 0, ',', '.') }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-6 py-3.5 whitespace-nowrap">
                                     @if($log->discrepancy == 0)
-                                        <span class="px-2.5 py-1 rounded-full bg-green-50 text-green-700 font-bold text-[11px]">Cocok</span>
+                                        <span class="pill pill-success">Cocok</span>
                                     @elseif($log->discrepancy > 0)
-                                        <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 font-bold text-[11px]">Surplus (+Rp {{ number_format($log->discrepancy, 0, ',', '.') }})</span>
+                                        <span class="pill pill-warn">Surplus +Rp {{ number_format($log->discrepancy, 0, ',', '.') }}</span>
                                     @else
-                                        <span class="px-2.5 py-1 rounded-full bg-red-50 text-red-700 font-bold text-[11px]">Defisit (-Rp {{ number_format(abs($log->discrepancy), 0, ',', '.') }})</span>
+                                        <span class="pill pill-danger">Defisit −Rp {{ number_format(abs($log->discrepancy), 0, ',', '.') }}</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 text-gray-500 max-w-xs truncate" title="{{ $log->notes }}">
+                                <td class="px-6 py-3.5 text-[#8a8179] max-w-xs truncate" title="{{ $log->notes }}">
                                     {{ $log->notes ?: '-' }}
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="px-6 py-12 text-center text-gray-400 italic">Belum ada riwayat penutupan kas.</td>
+                                <td colspan="9" class="px-6 py-12 text-center text-[#8a8179] text-sm">Belum ada riwayat penutupan kas.</td>
                             </tr>
                         @endforelse
                     </tbody>

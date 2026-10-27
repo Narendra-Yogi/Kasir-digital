@@ -27,7 +27,7 @@
         <h1 class="text-6xl font-bold text-gray-900 mb-2">403</h1>
         <h2 class="text-xl font-bold text-gray-700 mb-2">Akses Ditolak</h2>
         <p class="text-gray-500 mb-8 max-w-md mx-auto">Anda tidak memiliki izin untuk mengakses halaman ini. Silakan hubungi admin jika Anda merasa ini kesalahan.</p>
-        <a href="/" class="inline-flex items-center gap-2 bg-brand-700 text-white px-6 py-3 rounded-xl font-bold hover:bg-brand-800 transition-colors shadow-lg shadow-brand-700/20">
+        <a href="/" class="btn-ink text-sm px-6 py-3 inline-flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             Kembali ke Beranda
         </a>

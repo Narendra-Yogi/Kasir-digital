@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="max-w-xl">
-    <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+    <div class="card card-pad rise">
         <form action="{{ route('categories.store') }}" method="POST">
             @csrf
             <div class="mb-6">
@@ -15,7 +15,7 @@
             </div>
             <div class="flex gap-3">
                 <a href="{{ route('categories.index') }}" class="flex-1 text-center py-3.5 rounded-xl font-bold text-gray-400 hover:bg-gray-50 transition-all">Batal</a>
-                <button type="submit" class="flex-1 bg-brand-700 hover:bg-brand-800 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-brand-700/20 transition-all">Simpan</button>
+                <button type="submit" class="flex-1 btn-ink py-3 text-sm">Simpan</button>
             </div>
         </form>
     </div>

@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="max-w-2xl">
-    <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+    <div class="card card-pad rise">
         <form action="{{ route('users.update', $user->id) }}" method="POST" class="space-y-6">
             @csrf
             @method('PUT')
@@ -59,14 +59,14 @@
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Jawaban Keamanan Baru (Opsional)</label>
                     <input type="text" name="security_answer" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-brand-500 outline-none transition-all" placeholder="Kosongkan jika tidak ingin mengubah jawaban">
-                    <p class="text-[11px] text-gray-400 mt-1">Jawaban tidak bersifat case-sensitive. {{ $user->security_answer ? '✅ Jawaban keamanan sudah diset.' : '⚠️ Jawaban keamanan belum diset.' }}</p>
+                    <p class="text-[11px] text-gray-400 mt-1">Jawaban tidak bersifat case-sensitive. {{ $user->security_answer ? 'Jawaban keamanan sudah diset.' : 'Jawaban keamanan belum diset.' }}</p>
                     @error('security_answer') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
 
             <div class="flex gap-3 pt-4 border-t border-gray-100">
                 <a href="{{ route('users.index') }}" class="flex-1 text-center py-3.5 rounded-xl font-bold text-gray-400 hover:bg-gray-50 transition-all">Batal</a>
-                <button type="submit" class="flex-1 bg-brand-700 hover:bg-brand-800 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-brand-700/20 transition-all">Perbarui Akun</button>
+                <button type="submit" class="flex-1 btn-ink py-3 text-sm">Perbarui Akun</button>
             </div>
         </form>
     </div>

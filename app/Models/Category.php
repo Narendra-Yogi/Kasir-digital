@@ -16,7 +16,7 @@ class Category extends Model
         'updated_by',
     ];
 
-    public function items():HasMany
+    public function items(): HasMany
     {
         return $this->hasMany(Item::class);
     }

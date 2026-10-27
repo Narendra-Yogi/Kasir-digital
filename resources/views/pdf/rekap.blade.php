@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Rekap Laba Rugi - Geprek Legend</title>
+    <title>Rekap Hasil - Geprek Legend</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'DejaVu Sans', sans-serif; font-size: 10px; color: #1a1a2e; line-height: 1.5; background: #fff; }
@@ -30,6 +30,9 @@
         .summary-value.green { color: #16a34a; }
         .summary-value.red { color: #ef4444; }
         .summary-value.orange { color: #ea580c; }
+        .summary-note { font-size: 7px; color: #94a3b8; margin-top: 3px; }
+
+        .insight { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 10px 14px; margin-bottom: 15px; font-size: 9px; color: #7c2d12; }
 
         table { width: 100%; border-collapse: collapse; }
         thead th { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 8px 12px; font-size: 9px; font-weight: 700; text-transform: uppercase; color: #64748b; }
@@ -49,6 +52,8 @@
         .footer { border-top: 1px solid #e2e8f0; padding-top: 10px; margin-top: 20px; font-size: 8px; color: #94a3b8; display: table; width: 100%; }
         .footer-left { display: table-cell; }
         .footer-right { display: table-cell; text-align: right; }
+        .sign { margin-top: 25px; display: table; width: 100%; font-size: 9px; }
+        .sign-col { display: table-cell; width: 50%; text-align: center; }
     </style>
 </head>
 <body>
@@ -60,12 +65,17 @@
                     <div class="brand-sub">Sistem Kasir Digital</div>
                 </div>
                 <div class="header-right">
-                    <div class="report-title">REKAPITULASI LABA / RUGI</div>
+                    <div class="report-title">REKAP HASIL USAHA</div>
                     <div class="report-period">Periode: {{ $tanggalMulai->format('d M Y') }} — {{ $tanggalSelesai->format('d M Y') }}</div>
                     <div class="report-date">Dicetak: {{ now()->format('d M Y, H:i') }} WIB</div>
                 </div>
             </div>
         </div>
+
+        @php
+            $hasilBersih = $hasilBersih ?? $labaBersih ?? 0;
+            $marginBersih = $marginBersih ?? $profitMargin ?? 0;
+        @endphp
 
         <!-- Summary -->
         <div class="summary-row">
@@ -73,30 +83,42 @@
                 <div class="summary-box green">
                     <div class="summary-label">Total Pemasukan</div>
                     <div class="summary-value green">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</div>
+                    <div class="summary-note">{{ $totalTransaksi ?? 0 }} transaksi</div>
                 </div>
             </div>
             <div class="summary-card">
                 <div class="summary-box red">
                     <div class="summary-label">Total Pengeluaran</div>
                     <div class="summary-value red">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</div>
+                    <div class="summary-note">Belanja + operasional + gaji</div>
                 </div>
             </div>
             <div class="summary-card">
                 <div class="summary-box orange">
-                    <div class="summary-label">Laba Bersih</div>
-                    <div class="summary-value {{ $labaBersih >= 0 ? 'green' : 'red' }}">Rp {{ number_format($labaBersih, 0, ',', '.') }}</div>
+                    <div class="summary-label">Hasil Bersih ({{ $hasilBersih >= 0 ? 'Untung' : 'Rugi' }})</div>
+                    <div class="summary-value {{ $hasilBersih >= 0 ? 'green' : 'red' }}">Rp {{ number_format($hasilBersih, 0, ',', '.') }}</div>
+                    <div class="summary-note">Margin {{ $marginBersih }}%</div>
                 </div>
             </div>
+        </div>
+
+        <div class="insight">
+            Pemasukan Rp {{ number_format($totalPemasukan, 0, ',', '.') }} dikurangi pengeluaran Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}
+            = hasil bersih Rp {{ number_format($hasilBersih, 0, ',', '.') }} ({{ $marginBersih }}%).
+            @if(!empty($bestDay)) Hari terbaik: {{ $bestDay['tanggal'] }} (Rp {{ number_format($bestDay['total'], 0, ',', '.') }}). @endif
+            @if(!empty($menuTerlaris) && $menuTerlaris->count() > 0) Menu terlaris: {{ $menuTerlaris->first()->item->name ?? '-' }} ({{ $menuTerlaris->first()->total_qty ?? 0 }} porsi). @endif
+            Tunai Rp {{ number_format($totalTunai ?? 0, 0, ',', '.') }} · QRIS Rp {{ number_format($totalQris ?? 0, 0, ',', '.') }}.
         </div>
 
         <!-- Table -->
         <table>
             <thead>
                 <tr>
-                    <th class="text-left" style="width: 30%;">Hari / Tanggal</th>
+                    <th class="text-left" style="width: 26%;">Hari / Tanggal</th>
                     <th class="text-right">Pemasukan</th>
                     <th class="text-right">Pengeluaran</th>
-                    <th class="text-right">Laba / Rugi</th>
+                    <th class="text-right">Hasil Bersih</th>
+                    <th class="text-right">Transaksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -109,9 +131,10 @@
                         {{ $data['total'] < 0 ? '- ' : '' }}Rp {{ number_format(abs($data['total']), 0, ',', '.') }}
                         @if($data['total'] < 0) ⚠ @endif
                     </td>
+                    <td class="text-right">{{ $data['transaksi'] ?? 0 }}</td>
                 </tr>
                 @empty
-                <tr><td colspan="4" class="text-center text-muted" style="padding: 20px;">Tidak ada data pada periode ini.</td></tr>
+                <tr><td colspan="5" class="text-center text-muted" style="padding: 20px;">Tidak ada data pada periode ini.</td></tr>
                 @endforelse
 
                 @if($rekapData->count() > 0)
@@ -119,16 +142,22 @@
                     <td class="font-bold" style="font-size: 10px;">TOTAL KESELURUHAN</td>
                     <td class="text-right text-green font-bold" style="font-size: 10px;">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</td>
                     <td class="text-right text-red font-bold" style="font-size: 10px;">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</td>
-                    <td class="text-right font-bold {{ $labaBersih >= 0 ? 'text-green' : 'text-red' }}" style="font-size: 11px;">
-                        Rp {{ number_format($labaBersih, 0, ',', '.') }}
+                    <td class="text-right font-bold {{ $hasilBersih >= 0 ? 'text-green' : 'text-red' }}" style="font-size: 11px;">
+                        Rp {{ number_format($hasilBersih, 0, ',', '.') }}
                     </td>
+                    <td class="text-right font-bold" style="font-size: 10px;">{{ $totalTransaksi ?? 0 }}</td>
                 </tr>
                 @endif
             </tbody>
         </table>
 
+        <div class="sign">
+            <div class="sign-col">Diperiksa oleh,<br><br><br><br>( .................... )</div>
+            <div class="sign-col">Dibuat oleh {{ auth()->user()->name }},<br>{{ now()->format('d/m/Y') }}<br><br><br>( .................... )</div>
+        </div>
+
         <div class="footer">
-            <div class="footer-left">Geprek Legend — Rekap Laba/Rugi</div>
+            <div class="footer-left">Geprek Legend — Rekap Hasil Usaha</div>
             <div class="footer-right">Dicetak oleh: {{ auth()->user()->name }} | {{ now()->format('d/m/Y H:i') }}</div>
         </div>
     </div>

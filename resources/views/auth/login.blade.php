@@ -4,72 +4,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Geprek Legend</title>
+    <title>Masuk - Geprek Legend</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-surface font-sans text-gray-800 h-screen flex items-center justify-center">
+<body class="bg-surface font-sans text-[#1c1410] min-h-screen flex items-center justify-center p-4">
 
-    <div
-        class="bg-white p-8 sm:p-10 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.04)] w-full max-w-md border border-gray-100">
-
-        <div class="flex justify-center mb-8">
-            <div class="w-14 h-14 bg-gradient-to-tr from-brand-600 to-brand-400 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-brand-600/30">
-                <svg class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2C11.5 3.5 10.5 4.5 9.5 5.5C7.5 7.5 6.5 9.5 6.5 12C6.5 15 8.5 17.5 11.5 18C12.5 18.2 13.5 18 14.5 17.5C16.5 16.5 17.5 14.5 17.5 12C17.5 9.5 16 7.5 14 5.5C13 4.5 12.5 3.5 12 2Z" fill="currentColor"/>
-                    <path d="M12 6.5C11.7 7.5 11 8.2 10.3 8.8C8.8 10.2 8 11.5 8 13.2C8 15.2 9.5 16.8 11.5 17.2C12 17.3 12.5 17.2 13 16.8C14.2 16 15 14.8 15 13.2C15 11.5 14 10.2 12.7 8.8C12.3 8.2 12 7.5 12 6.5Z" fill="#fff7ed"/>
-                    <path d="M12 11.5L13.5 12.2L12 13V11.5Z" fill="#ea580c"/>
-                </svg>
-            </div>
-        </div>
-
-        <div class="text-center mb-8">
-            <h1 class="text-2xl font-bold text-gray-900">Selamat Datang</h1>
-            <p class="text-sm text-gray-500 mt-2">Silakan login untuk mengakses sistem kasir.</p>
-        </div>
-
-        @if ($errors->any())
-            <div
-                class="bg-red-50 text-red-600 p-4 rounded-xl text-sm mb-6 border border-red-100 text-center font-medium">
-                {{ $errors->first() }}
-            </div>
-        @endif
-
-        <form action="{{ route('login') }}" method="POST" class="space-y-5">
-            @csrf
-
-            <div>
-                <label for="username" class="block text-sm font-semibold text-gray-700 mb-2">Username</label>
-                <input type="text" name="username" id="username" value="{{ old('username') }}"
-                    class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-brand-500 transition-colors"
-                    placeholder="Masukkan username" required autofocus>
-            </div>
-
-            <div>
-                <div class="flex justify-between items-center mb-2">
-                    <label for="password" class="block text-sm font-semibold text-gray-700">Password</label>
-                    <a href="{{ route('password.forgot') }}" class="text-sm font-medium text-brand-700 hover:text-brand-800 transition-colors">Lupa Password?</a>
+    <div class="w-full max-w-4xl grid md:grid-cols-[1.05fr_1fr] overflow-hidden rounded-[20px] border border-[#e8e0d3] bg-[#fffdf9] rise">
+        {{-- Panel merek --}}
+        <div class="hidden md:flex flex-col justify-between bg-[#17110c] text-stone-300 p-10">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl overflow-hidden ring-1 ring-white/15">
+                    <img src="{{ asset('images/logo.jpeg') }}" alt="Geprek Legend" class="w-full h-full object-cover">
                 </div>
-                <div class="relative">
-                    <input type="password" name="password" id="password"
-                        class="w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-brand-500 transition-colors"
-                        placeholder="••••••••" required>
-                    <button type="button" onclick="togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors">
-                        <svg id="eye-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <!-- Eye closed icon (default) -->
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
-                        </svg>
-                    </button>
+                <div>
+                    <p class="font-display text-lg text-[#f7f1e6] font-semibold leading-tight">Geprek Legend</p>
+                    <p class="text-xs text-stone-400">Kasir harian · dapur & kas</p>
+                </div>
+            </div>
+            <div>
+                <p class="font-display text-[32px] leading-[1.15] text-[#f7f1e6] font-semibold tracking-tight">Dapur yang rapi,<br>kasir yang tenang.</p>
+                <p class="text-sm text-stone-400 mt-4 leading-relaxed">Satu tempat untuk pesanan, pengeluaran, dan rekap hasil harian. Dibuat untuk ritme warung yang cepat.</p>
+                <div class="mt-8 pt-6 border-t border-white/10 grid grid-cols-3 gap-4">
+                    <div>
+                        <p class="font-display text-xl text-[#f7f1e6] tnum">POS</p>
+                        <p class="text-xs text-stone-500 mt-1">Checkout cepat</p>
+                    </div>
+                    <div>
+                        <p class="font-display text-xl text-[#f7f1e6] tnum">Hasil</p>
+                        <p class="text-xs text-stone-500 mt-1">Rekap bersih</p>
+                    </div>
+                    <div>
+                        <p class="font-display text-xl text-[#f7f1e6] tnum">Kas</p>
+                        <p class="text-xs text-stone-500 mt-1">Selisih terpantau</p>
+                    </div>
+                </div>
+            </div>
+            <p class="text-xs text-stone-500">Shift hari ini · {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}</p>
+        </div>
+
+        {{-- Formulir --}}
+        <div class="p-8 sm:p-10">
+            <div class="md:hidden flex items-center gap-3 mb-8">
+                <div class="w-10 h-10 rounded-xl overflow-hidden ring-1 ring-[#e8e0d3]">
+                    <img src="{{ asset('images/logo.jpeg') }}" alt="Geprek Legend" class="w-full h-full object-cover">
+                </div>
+                <div>
+                    <p class="font-display text-base font-semibold leading-tight">Geprek Legend</p>
+                    <p class="text-xs text-[#8a8179]">Kasir harian</p>
                 </div>
             </div>
 
-            <button type="submit"
-                class="w-full bg-brand-700 hover:bg-brand-800 text-white font-bold py-3.5 rounded-xl transition-colors shadow-lg shadow-brand-700/30 mt-4">
-                Masuk ke Sistem
-            </button>
-        </form>
+            <h1 class="font-display text-[26px] font-semibold tracking-tight">Selamat datang kembali</h1>
+            <p class="text-sm text-[#8a8179] mt-1.5">Masuk untuk membuka kasir dan laporan hari ini.</p>
 
+            @if ($errors->any())
+                <div class="bg-[#fdf0ee] text-[#931b13] px-4 py-3 rounded-[10px] text-sm mt-6 border border-[#f2b3a6] font-medium">
+                    {{ $errors->first() }}
+                </div>
+            @endif
+
+            <form action="{{ route('login') }}" method="POST" class="space-y-4 mt-7">
+                @csrf
+
+                <div>
+                    <label for="username" class="block text-sm font-medium text-[#1c1410] mb-1.5">Username</label>
+                    <input type="text" name="username" id="username" value="{{ old('username') }}"
+                        class="field" placeholder="Nama pengguna kasir" required autofocus>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label for="password" class="block text-sm font-medium text-[#1c1410]">Password</label>
+                        <a href="{{ route('password.forgot') }}" class="text-sm font-medium text-[#931b13] hover:text-[#751510] transition-colors">Lupa password?</a>
+                    </div>
+                    <div class="relative">
+                        <input type="password" name="password" id="password"
+                            class="field pr-11" placeholder="Kata sandi" required>
+                        <button type="button" onclick="togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#8a8179] hover:text-[#1c1410] focus:outline-none transition-colors" aria-label="Tampilkan sandi">
+                            <svg id="eye-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-ink w-full py-3 text-sm">
+                    Masuk ke sistem
+                </button>
+                <p class="text-xs text-[#8a8179] text-center pt-1">Gunakan akun kasir untuk jualan, akun admin untuk kelola menu & laporan.</p>
+            </form>
+        </div>
     </div>
 
     <!-- SweetAlert2 -->
@@ -78,15 +104,13 @@
         function togglePassword() {
             const passwordInput = document.getElementById('password');
             const eyeIcon = document.getElementById('eye-icon');
-            
+
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
-                // Eye open icon
-                eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
+                eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
             } else {
                 passwordInput.type = 'password';
-                // Eye closed icon
-                eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>';
+                eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>';
             }
         }
 
@@ -94,9 +118,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             Swal.fire({
                 icon: 'success',
-                title: 'Berhasil!',
+                title: 'Berhasil',
                 text: '{{ session("success") }}',
-                confirmButtonColor: '#ea580c',
+                confirmButtonColor: '#931b13',
             });
         });
         @endif

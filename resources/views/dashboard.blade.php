@@ -1,115 +1,98 @@
 @extends('layouts.app')
 
 @section('title', 'Dashboard')
-@section('page_title', 'Dashboard Overview')
+@section('page_title', 'Ringkasan hari ini')
 
 @section('content')
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6 mb-6 lg:mb-8">
-    {{-- Omzet Hari Ini --}}
-    <div class="bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up">
-        <p class="text-[10px] lg:text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 lg:mb-2">Omzet Hari Ini</p>
-        <h3 class="text-lg lg:text-2xl font-bold text-gray-900">Rp {{ number_format($totalPendapatanHariIni, 0, ',', '.') }}</h3>
-        <div class="mt-2 lg:mt-4 flex items-center gap-1.5">
-            @if($pertumbuhanPendapatan != 0)
-                <span class="flex items-center text-xs font-bold px-1.5 py-0.5 rounded {{ $pertumbuhanPendapatan > 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500' }}">
-                    @if($pertumbuhanPendapatan > 0)
-                    <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 10l7-7m0 0l7 7m-7-7v18" stroke-width="3"></path></svg>
-                    @else
-                    <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 14l-7 7m0 0l-7-7m7 7V3" stroke-width="3"></path></svg>
-                    @endif
-                    {{ abs($pertumbuhanPendapatan) }}%
-                </span>
-                <span class="text-[10px] text-gray-400">dari kemarin</span>
-            @else
-                <span class="text-[10px] text-gray-400 italic">Sama dengan kemarin</span>
-            @endif
+@php $hasilBersihHariIni = $totalPendapatanHariIni - $totalPengeluaranHariIni; $labaBersih = $hasilBersihHariIni; @endphp
+
+<div class="card rise overflow-hidden mb-5">
+    <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-[#f1ebe0]">
+        <div class="p-5 lg:p-6">
+            <p class="text-[13px] text-[#8a8179]">Omzet hari ini</p>
+            <p class="font-display text-xl lg:text-[26px] font-semibold tnum tracking-tight mt-1.5">Rp {{ number_format($totalPendapatanHariIni, 0, ',', '.') }}</p>
+            <p class="text-xs mt-2 {{ $pertumbuhanPendapatan > 0 ? 'text-[#1a6b3c]' : ($pertumbuhanPendapatan < 0 ? 'text-[#931b13]' : 'text-[#8a8179]') }}">
+                @if($pertumbuhanPendapatan != 0)
+                    {{ $pertumbuhanPendapatan > 0 ? '+' : '' }}{{ $pertumbuhanPendapatan }}% dibanding kemarin
+                @else
+                    Sama seperti kemarin
+                @endif
+            </p>
         </div>
-    </div>
-
-    {{-- Pesanan Sukses --}}
-    <div class="bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up stagger-1">
-        <p class="text-[10px] lg:text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 lg:mb-2">Pesanan Sukses</p>
-        <h3 class="text-2xl lg:text-4xl font-bold text-gray-900">{{ $totalPesananHariIni }}</h3>
-        <p class="text-[10px] lg:text-xs text-gray-400 mt-2 lg:mt-4 italic">Transaksi diproses hari ini</p>
-    </div>
-
-    {{-- Pengeluaran --}}
-    <div class="bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up stagger-2">
-        <p class="text-[10px] lg:text-xs font-bold text-red-400 uppercase tracking-wider mb-1 lg:mb-2">Pengeluaran Hari Ini</p>
-        <h3 class="text-lg lg:text-2xl font-bold text-red-600">Rp {{ number_format($totalPengeluaranHariIni, 0, ',', '.') }}</h3>
-        <p class="text-[10px] lg:text-xs text-gray-400 mt-2 lg:mt-4 italic">Total biaya operasional</p>
-    </div>
-
-    {{-- Laba Bersih --}}
-    @php $labaBersih = $totalPendapatanHariIni - $totalPengeluaranHariIni; @endphp
-    <div class="{{ $labaBersih >= 0 ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gradient-to-br from-red-500 to-rose-600' }} p-4 lg:p-6 rounded-2xl lg:rounded-3xl shadow-lg {{ $labaBersih >= 0 ? 'shadow-green-500/20' : 'shadow-red-500/20' }} text-white animate-fade-in-up stagger-3">
-        <p class="text-[10px] lg:text-xs font-bold opacity-70 uppercase tracking-wider mb-1 lg:mb-2">💰 Laba Bersih Hari Ini</p>
-        <h3 class="text-lg lg:text-2xl font-bold">Rp {{ number_format(abs($labaBersih), 0, ',', '.') }}</h3>
-        <p class="text-[10px] mt-2 opacity-80 italic font-medium">
-            {{ $labaBersih >= 0 ? '✅ Untung hari ini' : '⚠️ Rugi hari ini' }}
-        </p>
+        <div class="p-5 lg:p-6">
+            <p class="text-[13px] text-[#8a8179]">Pesanan sukses</p>
+            <p class="font-display text-xl lg:text-[26px] font-semibold tnum tracking-tight mt-1.5">{{ $totalPesananHariIni }} <span class="text-sm font-sans font-normal text-[#8a8179]">transaksi</span></p>
+            <p class="text-xs text-[#8a8179] mt-2">Diproses hari ini</p>
+        </div>
+        <div class="p-5 lg:p-6">
+            <p class="text-[13px] text-[#8a8179]">Pengeluaran</p>
+            <p class="font-display text-xl lg:text-[26px] font-semibold tnum tracking-tight mt-1.5">Rp {{ number_format($totalPengeluaranHariIni, 0, ',', '.') }}</p>
+            <p class="text-xs text-[#8a8179] mt-2">Biaya operasional</p>
+        </div>
+        <div class="p-5 lg:p-6 bg-[#17110c] text-stone-200">
+            <p class="text-[13px] text-stone-400">Hasil bersih</p>
+            <p class="font-display text-xl lg:text-[26px] font-semibold tnum tracking-tight mt-1.5 text-[#f7f1e6]">Rp {{ number_format(abs($hasilBersihHariIni), 0, ',', '.') }}</p>
+            <p class="text-xs mt-2 {{ $hasilBersihHariIni >= 0 ? 'text-[#e8c96a]' : 'text-[#e68373]' }}">{{ $hasilBersihHariIni >= 0 ? 'Untung hari ini' : 'Rugi hari ini' }}</p>
+        </div>
     </div>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8 mb-6 lg:mb-8">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
     {{-- Weekly Sales Chart --}}
-    <div class="lg:col-span-2 bg-white p-4 lg:p-8 rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm h-[300px] lg:h-[450px]">
-        <div class="flex justify-between items-center mb-4 lg:mb-8">
-            <h3 class="text-sm lg:text-lg font-bold text-gray-900">Analitik Penjualan Mingguan</h3>
-            <span class="text-[10px] lg:text-xs font-bold text-brand-700 bg-brand-50 px-2 lg:px-3 py-1 rounded-lg">7 Hari Terakhir</span>
+    <div class="lg:col-span-2 card card-pad rise">
+        <div class="flex justify-between items-baseline mb-5">
+            <div>
+                <h3 class="font-display text-lg font-semibold tracking-tight">Penjualan 7 hari terakhir</h3>
+                <p class="text-[13px] text-[#8a8179] mt-0.5">Pendapatan kotor per hari</p>
+            </div>
         </div>
-        <div class="relative h-48 lg:h-64">
+        <div class="relative h-52 lg:h-64">
             <canvas id="salesChart"></canvas>
         </div>
     </div>
 
     {{-- Recent Transactions --}}
-    <div class="bg-white p-4 lg:p-8 rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm h-[350px] lg:h-[450px] flex flex-col">
-        <h3 class="text-sm lg:text-lg font-bold text-gray-900 mb-4 lg:mb-6">Transaksi Terbaru</h3>
-        <div class="space-y-4 lg:space-y-6 overflow-y-auto flex-1 pr-2">
+    <div class="card card-pad rise flex flex-col">
+        <div class="mb-4">
+            <h3 class="font-display text-lg font-semibold tracking-tight">Transaksi terbaru</h3>
+            <p class="text-[13px] text-[#8a8179] mt-0.5">Aktivitas kasir terkini</p>
+        </div>
+        <div class="divide-y divide-[#f1ebe0] overflow-y-auto flex-1 -mx-1 pr-1">
             @foreach($transaksiTerbaru as $order)
-            <div class="flex items-center gap-3 lg:gap-4 {{ $order->status === 'cancelled' ? 'opacity-50' : '' }}">
-                <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl {{ $order->status === 'cancelled' ? 'bg-red-50 text-red-500 border-red-100' : 'bg-gray-50 text-brand-700 border-gray-100' }} flex items-center justify-center font-bold border shrink-0 text-xs lg:text-sm">
+            <div class="flex items-center gap-3 py-3 {{ $order->status === 'cancelled' ? 'opacity-55' : '' }}">
+                <div class="w-9 h-9 rounded-full {{ $order->status === 'cancelled' ? 'bg-[#fdf0ee] text-[#931b13]' : 'bg-[#f4eee2] text-[#57504a]' }} flex items-center justify-center font-display font-semibold text-sm shrink-0">
                     {{ substr($order->customer_name ?? 'P', 0, 1) }}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-xs lg:text-sm font-bold text-gray-900 truncate">{{ $order->customer_name ?? 'Pelanggan Umum' }}</p>
-                    <p class="text-[10px] lg:text-xs text-gray-400">{{ $order->created_at->diffForHumans() }}</p>
+                    <p class="text-sm font-medium text-[#1c1410] truncate">{{ $order->customer_name ?? 'Pelanggan umum' }}</p>
+                    <p class="text-xs text-[#8a8179]">{{ $order->created_at->diffForHumans() }} · {{ $order->payment_method }}</p>
                 </div>
-                <div class="text-right">
-                    <p class="text-xs lg:text-sm font-bold {{ $order->status === 'cancelled' ? 'text-red-400 line-through' : 'text-brand-700' }}">Rp{{ number_format($order->total_amount, 0, ',', '.') }}</p>
-                    @if($order->status === 'cancelled')
-                        <p class="text-[10px] font-bold text-red-400 uppercase">Dibatalkan</p>
-                    @else
-                        <p class="text-[10px] font-bold text-gray-300 uppercase">{{ $order->payment_method }}</p>
-                    @endif
-                </div>
+                <p class="text-sm font-semibold tnum {{ $order->status === 'cancelled' ? 'text-[#931b13] line-through' : 'text-[#1c1410]' }}">Rp{{ number_format($order->total_amount, 0, ',', '.') }}</p>
             </div>
             @endforeach
         </div>
         @if(auth()->user()->role === 'admin')
-        <a href="{{ route('reports.index') }}" class="mt-4 lg:mt-6 text-center text-xs lg:text-sm font-bold text-brand-700 hover:underline">Lihat Semua Laporan</a>
+        <a href="{{ route('reports.index') }}" class="mt-4 pt-4 border-t border-[#f1ebe0] text-sm font-medium text-[#931b13] hover:text-[#751510]">Buka laporan kasir</a>
         @endif
     </div>
 </div>
 
 {{-- Top Items Today --}}
 @if($produkTerlarisHariIni->count() > 0)
-<div class="bg-white p-4 lg:p-8 rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm">
-    <div class="flex justify-between items-center mb-4 lg:mb-6">
-        <h3 class="text-sm lg:text-lg font-bold text-gray-900">🏆 Produk Terlaris Hari Ini</h3>
-        <span class="text-[10px] lg:text-xs font-bold text-brand-700 bg-brand-50 px-2 lg:px-3 py-1 rounded-lg">{{ $produkTerlarisHariIni->sum('total_qty') }} item terjual</span>
+<div class="card card-pad rise">
+    <div class="flex justify-between items-baseline mb-4">
+        <div>
+            <h3 class="font-display text-lg font-semibold tracking-tight">Terlaris hari ini</h3>
+            <p class="text-[13px] text-[#8a8179] mt-0.5">{{ $produkTerlarisHariIni->sum('total_qty') }} porsi terjual</p>
+        </div>
     </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         @foreach($produkTerlarisHariIni as $i => $topItem)
-        <div class="flex items-center gap-3 p-3 lg:p-4 rounded-xl {{ $i === 0 ? 'bg-amber-50 border border-amber-100' : 'bg-gray-50' }}">
-            <span class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-black shrink-0 {{ $i === 0 ? 'bg-amber-200 text-amber-800' : ($i === 1 ? 'bg-gray-200 text-gray-700' : 'bg-orange-100 text-orange-500') }}">
-                {{ $i + 1 }}
-            </span>
+        <div class="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-[#f1ebe0] bg-white">
+            <span class="font-display text-xl font-semibold tnum w-7 shrink-0 {{ $i === 0 ? 'text-[#c9a227]' : 'text-[#b3a897]' }}">{{ $i + 1 }}</span>
             <div class="flex-1 min-w-0">
-                <p class="text-xs font-bold text-gray-900 truncate">{{ $topItem->item->name ?? 'Item Terhapus' }}</p>
-                <p class="text-[10px] text-gray-400">{{ $topItem->total_qty }} terjual</p>
-                <p class="text-xs font-bold text-brand-700 mt-0.5">Rp {{ number_format($topItem->total_revenue, 0, ',', '.') }}</p>
+                <p class="text-[13px] font-medium text-[#1c1410] truncate">{{ $topItem->item->name ?? 'Item terhapus' }}</p>
+                <p class="text-xs text-[#8a8179] mt-0.5">{{ $topItem->total_qty }} terjual · <span class="tnum font-medium text-[#1c1410]">Rp {{ number_format($topItem->total_revenue, 0, ',', '.') }}</span></p>
             </div>
         </div>
         @endforeach
@@ -122,11 +105,6 @@
     document.addEventListener('DOMContentLoaded', function() {
         const ctx = document.getElementById('salesChart').getContext('2d');
         const isMobile = window.innerWidth < 768;
-        
-        // Gradient fill
-        const gradient = ctx.createLinearGradient(0, 0, 0, isMobile ? 200 : 280);
-        gradient.addColorStop(0, 'rgba(9, 121, 70, 0.25)');
-        gradient.addColorStop(1, 'rgba(9, 121, 70, 0.02)');
 
         new Chart(ctx, {
             type: 'bar',
@@ -135,32 +113,21 @@
                 datasets: [{
                     label: 'Pendapatan (Rp)',
                     data: {!! json_encode($penjualanMingguan) !!},
-                    backgroundColor: function(context) {
-                        const chart = context.chart;
-                        const {ctx, chartArea} = chart;
-                        if (!chartArea) return '#097946';
-                        const grad = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                        grad.addColorStop(0, '#097946');
-                        grad.addColorStop(1, '#0d9e5d');
-                        return grad;
-                    },
-                    borderRadius: isMobile ? 6 : 12,
+                    backgroundColor: '#1c1410',
+                    hoverBackgroundColor: '#931b13',
+                    borderRadius: isMobile ? 5 : 7,
                     barThickness: isMobile ? 16 : 30,
-                    hoverBackgroundColor: '#065f3a',
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                animation: {
-                    duration: 1000,
-                    easing: 'easeOutQuart'
-                },
+                animation: { duration: 700, easing: 'easeOutQuart' },
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: '#1a1a2e',
-                        titleFont: { size: 11, weight: 'bold' },
+                        backgroundColor: '#17110c',
+                        titleFont: { size: 11, weight: '500' },
                         bodyFont: { size: 13 },
                         padding: 12,
                         cornerRadius: 10,
@@ -174,19 +141,22 @@
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: { color: '#f1f5f9', drawBorder: false },
+                        grid: { color: '#f1ebe0' },
+                        border: { display: false },
                         ticks: {
-                            font: { size: isMobile ? 9 : 12 },
+                            font: { size: isMobile ? 10 : 11 },
+                            color: '#8a8179',
                             callback: function(value) {
-                                if (value >= 1000000) return 'Rp ' + (value / 1000000).toFixed(1) + 'jt';
-                                if (value >= 1000) return 'Rp ' + (value / 1000).toFixed(0) + 'rb';
-                                return 'Rp ' + value;
+                                if (value >= 1000000) return (value / 1000000).toFixed(1) + ' jt';
+                                if (value >= 1000) return (value / 1000).toFixed(0) + ' rb';
+                                return value;
                             }
                         }
                     },
                     x: {
-                        grid: { display: false, drawBorder: false },
-                        ticks: { font: { size: isMobile ? 9 : 12 } }
+                        grid: { display: false },
+                        border: { display: false },
+                        ticks: { font: { size: isMobile ? 10 : 11 }, color: '#57504a' }
                     }
                 }
             }

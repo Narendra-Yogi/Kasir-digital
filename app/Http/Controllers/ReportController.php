@@ -2,55 +2,42 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Pengeluaran;
-use App\Models\Inventory;
+use App\Models\Item;
 use App\Models\Order;
 use App\Models\OrderDetail;
-use Illuminate\Http\Request;
-use Carbon\Carbon;
+use App\Models\Pengeluaran;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class ReportController extends Controller
 {
     // ========================================================
-    //  LAPORAN PENJUALAN (INDEX)
+    //  LAPORAN PENJUALAN / RINCIAN TRANSAKSI (INDEX)
     // ========================================================
 
     public function index(Request $request)
     {
-        // Mendapatkan rentang tanggal mulai dan selesai dari request (default: bulan ini)
         [$tanggalMulai, $tanggalSelesai] = $this->uraikanRentangTanggal($request, 'month');
 
-        // --- Menggunakan query aggregate (efisien, tidak meload semua baris data ke memory RAM) ---
-        // Membuat basis query untuk transaksi yang sukses di antara rentang tanggal yang dipilih
         $querySukses = Order::sukses()->antaraTanggal($tanggalMulai, $tanggalSelesai);
 
-        // Menghitung total omzet pendapatan dari transaksi yang sukses
-        $totalPendapatan  = (clone $querySukses)->sum('total_amount');
-        // Menghitung total jumlah transaksi sukses
-        $totalTransaksi   = (clone $querySukses)->count();
-        // Menghitung jumlah transaksi yang dibatalkan
-        $totalDibatalkan  = Order::dibatalkan()->antaraTanggal($tanggalMulai, $tanggalSelesai)->count();
-        // Menghitung rata-rata nilai transaksi
+        $totalPendapatan = (clone $querySukses)->sum('total_amount');
+        $totalTransaksi = (clone $querySukses)->count();
+        $totalDibatalkan = Order::dibatalkan()->antaraTanggal($tanggalMulai, $tanggalSelesai)->count();
         $rataRataTransaksi = $totalTransaksi > 0 ? $totalPendapatan / $totalTransaksi : 0;
 
-        // --- Breakdown Metode Pembayaran ---
-        // Menggunakan 1 query dengan GROUP BY untuk efisiensi performa database
         $rincianMetodeBayar = Order::sukses()
             ->antaraTanggal($tanggalMulai, $tanggalSelesai)
             ->selectRaw('payment_method, COUNT(*) as jumlah, SUM(total_amount) as total')
             ->groupBy('payment_method')
             ->pluck('jumlah', 'payment_method');
 
-        // Mengambil jumlah masing-masing metode pembayaran (tunai / qris)
         $jumlahTunai = $rincianMetodeBayar->get('cash', 0);
-        $jumlahQris  = $rincianMetodeBayar->get('qris', 0);
+        $jumlahQris = $rincianMetodeBayar->get('qris', 0);
 
-        // --- Mendapatkan daftar 5 produk terlaris dalam periode ini ---
         $produkTerlaris = $this->ambilProdukTerlaris($tanggalMulai, $tanggalSelesai, 5);
 
-        // --- Data Grafik Mini: Tren Pendapatan Harian ---
         $pendapatanHarian = Order::sukses()
             ->antaraTanggal($tanggalMulai, $tanggalSelesai)
             ->selectRaw('DATE(created_at) as tanggal, SUM(total_amount) as total')
@@ -60,36 +47,26 @@ class ReportController extends Controller
             ->keyBy('tanggal');
 
         $labelGrafikMini = [];
-        $dataGrafikMini  = [];
-        
-        // Melakukan looping dari tanggal mulai sampai tanggal selesai untuk mengisi data grafik
+        $dataGrafikMini = [];
+
         for ($d = $tanggalMulai->copy(); $d->lte($tanggalSelesai); $d->addDay()) {
             $formatTanggal = $d->format('Y-m-d');
             $labelGrafikMini[] = $d->format('d M');
-            $dataGrafikMini[]  = (int) ($pendapatanHarian->has($formatTanggal) ? $pendapatanHarian[$formatTanggal]->total : 0);
+            $dataGrafikMini[] = (int) ($pendapatanHarian->has($formatTanggal) ? $pendapatanHarian[$formatTanggal]->total : 0);
         }
 
-        // --- Mengambil Total HPP dari order_details dalam periode ini ---
-        $totalHpp = OrderDetail::whereHas('order', function($q) use ($tanggalMulai, $tanggalSelesai) {
-                $q->sukses()->antaraTanggal($tanggalMulai, $tanggalSelesai);
-            })->selectRaw('SUM(hpp * quantity) as total')->value('total') ?? 0;
-
-        $labaKotor = $totalPendapatan - $totalHpp;
-
-        // --- Mengambil data transaksi dengan pagination (20 data per halaman) ---
-        $pesanan = Order::with(['user', 'orderDetails.item' => function($query) {
-                $query->withTrashed(); // Tetap menampilkan produk meskipun sudah dihapus soft-delete
-            }])
+        $pesanan = Order::with(['user', 'orderDetails.item' => function ($query) {
+            $query->withTrashed();
+        }])
             ->antaraTanggal($tanggalMulai, $tanggalSelesai)
-            ->latest()
+            ->latest('id')
             ->paginate(20)
-            ->appends($request->query()); // Menjaga agar filter filter tanggal tetap terbawa saat ganti halaman
+            ->appends($request->query());
 
-        // Mengirimkan data yang siap pakai ke view laporan utama
         return view('reports.index', compact(
-            'pesanan', 'totalPendapatan', 'totalTransaksi', 'totalDibatalkan', 
+            'pesanan', 'totalPendapatan', 'totalTransaksi', 'totalDibatalkan',
             'rataRataTransaksi', 'jumlahTunai', 'jumlahQris', 'tanggalMulai', 'tanggalSelesai',
-            'produkTerlaris', 'labelGrafikMini', 'dataGrafikMini', 'totalHpp', 'labaKotor'
+            'produkTerlaris', 'labelGrafikMini', 'dataGrafikMini'
         ));
     }
 
@@ -99,27 +76,23 @@ class ReportController extends Controller
 
     public function cancel(Order $order)
     {
-        // Memeriksa jika transaksi tersebut memang sudah dibatalkan sebelumnya
         if ($order->status === 'cancelled') {
             return back()->with('error', 'Transaksi ini sudah dibatalkan sebelumnya.');
         }
 
-        // Mengubah status transaksi menjadi dibatalkan
         $order->update(['status' => 'cancelled']);
 
-        return back()->with('success', 'Transaksi ' . $order->invoice_number . ' berhasil dibatalkan.');
+        return back()->with('success', 'Transaksi '.$order->invoice_number.' berhasil dibatalkan.');
     }
 
     // ========================================================
-    //  REKAP LABA RUGI
+    //  REKAP HASIL USAHA (pengganti Rekap Laba Rugi)
     // ========================================================
 
     public function rekap(Request $request)
     {
-        // Menguraikan rentang tanggal (default: 7 hari terakhir / seminggu)
         [$tanggalMulai, $tanggalSelesai] = $this->uraikanRentangTanggal($request, 'week');
-        
-        // Memanggil fungsi helper privat untuk mengambil rekap data laba rugi
+
         $data = $this->ambilDataRekap($tanggalMulai, $tanggalSelesai);
 
         return view('reports.rekap', array_merge($data, compact('tanggalMulai', 'tanggalSelesai')));
@@ -131,10 +104,8 @@ class ReportController extends Controller
 
     public function dailyReport(Request $request)
     {
-        // Mendapatkan tanggal yang diinput atau menggunakan tanggal hari ini sebagai default
         $tanggal = $request->get('date') ? Carbon::parse($request->get('date')) : Carbon::today();
-        
-        // Memanggil fungsi privat untuk memproses laporan harian
+
         $data = $this->ambilDataHarian($tanggal);
 
         return view('reports.daily', array_merge($data, compact('tanggal')));
@@ -146,58 +117,52 @@ class ReportController extends Controller
 
     public function exportSalesPdf(Request $request)
     {
-        // Ekspor PDF Laporan Penjualan bulanan/rentang tertentu
         [$tanggalMulai, $tanggalSelesai] = $this->uraikanRentangTanggal($request, 'month');
 
-        $pesanan = Order::with(['user', 'orderDetails.item' => function($query) {
-                $query->withTrashed();
-            }])
+        $pesanan = Order::with(['user', 'orderDetails.item' => function ($query) {
+            $query->withTrashed();
+        }])
             ->antaraTanggal($tanggalMulai, $tanggalSelesai)
-            ->latest()->get();
+            ->latest('id')->get();
 
-        $totalPendapatan  = $pesanan->where('status', 'success')->sum('total_amount');
-        $totalTransaksi   = $pesanan->where('status', 'success')->count();
-        $totalDibatalkan  = $pesanan->where('status', 'cancelled')->count();
+        $totalPendapatan = $pesanan->where('status', 'success')->sum('total_amount');
+        $totalTransaksi = $pesanan->where('status', 'success')->count();
+        $totalDibatalkan = $pesanan->where('status', 'cancelled')->count();
         $rataRataTransaksi = $totalTransaksi > 0 ? $totalPendapatan / $totalTransaksi : 0;
 
         $pdf = Pdf::loadView('pdf.sales', compact(
             'pesanan', 'totalPendapatan', 'totalTransaksi', 'totalDibatalkan', 'rataRataTransaksi', 'tanggalMulai', 'tanggalSelesai'
         ))->setPaper('a4', 'landscape');
 
-        return $pdf->download('Laporan-Penjualan-' . $tanggalMulai->format('dMY') . '-' . $tanggalSelesai->format('dMY') . '.pdf');
+        return $pdf->download('Laporan-Penjualan-'.$tanggalMulai->format('dMY').'-'.$tanggalSelesai->format('dMY').'.pdf');
     }
 
     public function exportDailyPdf(Request $request)
     {
-        // Ekspor PDF Laporan Harian
         $tanggal = $request->get('date') ? Carbon::parse($request->get('date')) : Carbon::today();
         $data = $this->ambilDataHarian($tanggal);
 
         $pdf = Pdf::loadView('pdf.daily', array_merge($data, compact('tanggal')))
             ->setPaper('a4', 'portrait');
 
-        return $pdf->download('Laporan-Harian-' . $tanggal->format('d-M-Y') . '.pdf');
+        return $pdf->download('Laporan-Harian-'.$tanggal->format('d-M-Y').'.pdf');
     }
 
     public function exportRekapPdf(Request $request)
     {
-        // Ekspor PDF Rekapitulasi Laba Rugi mingguan/rentang tertentu
         [$tanggalMulai, $tanggalSelesai] = $this->uraikanRentangTanggal($request, 'week');
         $data = $this->ambilDataRekap($tanggalMulai, $tanggalSelesai);
 
         $pdf = Pdf::loadView('pdf.rekap', array_merge($data, compact('tanggalMulai', 'tanggalSelesai')))
             ->setPaper('a4', 'portrait');
 
-        return $pdf->download('Rekap-LabaRugi-' . $tanggalMulai->format('dMY') . '-' . $tanggalSelesai->format('dMY') . '.pdf');
+        return $pdf->download('Rekap-Hasil-'.$tanggalMulai->format('dMY').'-'.$tanggalSelesai->format('dMY').'.pdf');
     }
 
     // ========================================================
-    //  FUNGSI HELPER PRIVAT (INTERNAL LOGIC)
+    //  FUNGSI HELPER PRIVAT
     // ========================================================
 
-    /**
-     * Memproses rentang tanggal mulai dan selesai dari Request secara pintar.
-     */
     private function parseDateRange(Request $request, string $defaultRange = 'month'): array
     {
         return $this->uraikanRentangTanggal($request, $defaultRange);
@@ -205,16 +170,14 @@ class ReportController extends Controller
 
     private function uraikanRentangTanggal(Request $request, string $defaultRange = 'month'): array
     {
-        // Mengambil tanggal selesai (jika kosong default: akhir hari ini)
-        $tanggalSelesai = $request->get('end_date') 
-            ? Carbon::parse($request->get('end_date'))->endOfDay() 
+        $tanggalSelesai = $request->get('end_date')
+            ? Carbon::parse($request->get('end_date'))->endOfDay()
             : Carbon::now()->endOfDay();
 
-        // Mengambil tanggal mulai
         if ($request->get('start_date')) {
             $tanggalMulai = Carbon::parse($request->get('start_date'))->startOfDay();
         } else {
-            $tanggalMulai = match($defaultRange) {
+            $tanggalMulai = match ($defaultRange) {
                 'week' => Carbon::now()->subDays(6)->startOfDay(),
                 'month' => Carbon::now()->startOfMonth(),
                 default => Carbon::now()->startOfMonth(),
@@ -224,109 +187,159 @@ class ReportController extends Controller
         return [$tanggalMulai, $tanggalSelesai];
     }
 
-    /**
-     * Mengambil data rekapitulasi laba rugi yang digunakan di View dan Ekspor PDF.
-     */
     private function getRekapData(Carbon $startDate, Carbon $endDate): array
     {
         return $this->ambilDataRekap($startDate, $endDate);
     }
 
+    /**
+     * Rekap Hasil Usaha:
+     * Hasil Bersih = Pemasukan (order success) - Pengeluaran.
+     */
     private function ambilDataRekap(Carbon $tanggalMulai, Carbon $tanggalSelesai): array
     {
-        // Mengambil pemasukan harian (transaksi sukses) yang di-group per tanggal
         $pesanan = Order::sukses()
             ->antaraTanggal($tanggalMulai, $tanggalSelesai)
-            ->selectRaw('DATE(created_at) as tanggal, SUM(total_amount) as total_pemasukan')
+            ->selectRaw('DATE(created_at) as tanggal, SUM(total_amount) as total_pemasukan, COUNT(*) as jumlah_transaksi')
             ->groupBy('tanggal')
             ->get()->keyBy('tanggal');
 
-        // Mengambil pengeluaran harian yang di-group per tanggal
         $pengeluaran = Pengeluaran::whereBetween('date', [$tanggalMulai->format('Y-m-d'), $tanggalSelesai->format('Y-m-d')])
             ->selectRaw('date, SUM(amount) as total_pengeluaran')
             ->groupBy('date')
             ->get()->keyBy('date');
 
-        // Mengambil total HPP harian dari order_details (hpp * quantity) per tanggal
-        $hppHarian = OrderDetail::whereHas('order', function($q) use ($tanggalMulai, $tanggalSelesai) {
-                $q->sukses()->antaraTanggal($tanggalMulai, $tanggalSelesai);
-            })
-            ->join('orders', 'order_details.order_id', '=', 'orders.id')
-            ->selectRaw('DATE(orders.created_at) as tanggal, SUM(order_details.hpp * order_details.quantity) as total_hpp')
-            ->groupBy('tanggal')
-            ->get()->keyBy('tanggal');
+        $pengeluaranPerKategori = Pengeluaran::whereBetween('date', [$tanggalMulai->format('Y-m-d'), $tanggalSelesai->format('Y-m-d')])
+            ->selectRaw('category, SUM(amount) as total')
+            ->groupBy('category')
+            ->pluck('total', 'category');
+
+        $metodeBayar = Order::sukses()
+            ->antaraTanggal($tanggalMulai, $tanggalSelesai)
+            ->selectRaw('payment_method, COUNT(*) as jumlah, SUM(total_amount) as total')
+            ->groupBy('payment_method')
+            ->get()
+            ->keyBy('payment_method');
 
         $rekapData = collect();
         $labelGrafik = [];
         $pemasukanGrafik = [];
         $pengeluaranGrafik = [];
-        $labaGrafik = [];
+        $hasilGrafik = [];
 
         $hariTerbaik = null;
         $hariTerburuk = null;
+        $hariUntung = 0;
 
-        // Loop harian untuk menghitung laba bersih per hari
         for ($tanggalObjek = $tanggalMulai->copy(); $tanggalObjek->lte($tanggalSelesai); $tanggalObjek->addDay()) {
             $tanggalStr = $tanggalObjek->format('Y-m-d');
-            $pemasukan = $pesanan->has($tanggalStr) ? $pesanan[$tanggalStr]->total_pemasukan : 0;
-            $pengeluaranHariIni = $pengeluaran->has($tanggalStr) ? $pengeluaran[$tanggalStr]->total_pengeluaran : 0;
-            $hppHariIni = $hppHarian->has($tanggalStr) ? $hppHarian[$tanggalStr]->total_hpp : 0;
-            $labaKotor = $pemasukan - $hppHariIni;
-            $laba = $pemasukan - $pengeluaranHariIni;
-            
-            $labelGrafik[] = $tanggalObjek->format('d M');
-            $pemasukanGrafik[] = (int) $pemasukan;
-            $pengeluaranGrafik[] = (int) $pengeluaranHariIni;
-            $labaGrafik[] = (int) $laba;
+            $pemasukan = $pesanan->has($tanggalStr) ? (int) $pesanan[$tanggalStr]->total_pemasukan : 0;
+            $jumlahTransaksi = $pesanan->has($tanggalStr) ? (int) $pesanan[$tanggalStr]->jumlah_transaksi : 0;
+            $pengeluaranHariIni = $pengeluaran->has($tanggalStr) ? (int) $pengeluaran[$tanggalStr]->total_pengeluaran : 0;
+            $hasil = $pemasukan - $pengeluaranHariIni;
 
-            // Hanya menyimpan baris jika ada aktivitas pemasukan atau pengeluaran
+            $labelGrafik[] = $tanggalObjek->format('d M');
+            $pemasukanGrafik[] = $pemasukan;
+            $pengeluaranGrafik[] = $pengeluaranHariIni;
+            $hasilGrafik[] = $hasil;
+
             if ($pemasukan > 0 || $pengeluaranHariIni > 0) {
                 $barisData = [
                     'tanggal' => $tanggalObjek->format('d M Y'),
+                    'tanggal_iso' => $tanggalStr,
                     'pemasukan' => $pemasukan,
-                    'hpp' => $hppHariIni,
-                    'laba_kotor' => $labaKotor,
                     'pengeluaran' => $pengeluaranHariIni,
-                    'total' => $laba,
+                    'total' => $hasil,
+                    'transaksi' => $jumlahTransaksi,
                 ];
                 $rekapData->push($barisData);
 
-                // Mencari hari terbaik (laba tertinggi) dan terburuk (laba terendah)
-                if ($hariTerbaik === null || $laba > $hariTerbaik['total']) $hariTerbaik = $barisData;
-                if ($hariTerburuk === null || $laba < $hariTerburuk['total']) $hariTerburuk = $barisData;
+                if ($hasil >= 0) {
+                    $hariUntung++;
+                }
+
+                if ($hariTerbaik === null || $hasil > $hariTerbaik['total']) {
+                    $hariTerbaik = $barisData;
+                }
+                if ($hariTerburuk === null || $hasil < $hariTerburuk['total']) {
+                    $hariTerburuk = $barisData;
+                }
             }
         }
 
         $totalPemasukan = $rekapData->sum('pemasukan');
         $totalPengeluaran = $rekapData->sum('pengeluaran');
-        $totalHpp = $rekapData->sum('hpp');
-        $totalLabaKotor = $totalPemasukan - $totalHpp;
-        $labaBersih = $totalPemasukan - $totalPengeluaran;
-        // Menghitung margin laba kotor/bersih dalam persen
-        $marginKeuntungan = $totalPemasukan > 0 ? round(($labaBersih / $totalPemasukan) * 100, 1) : 0;
-        $marginKotor = $totalPemasukan > 0 ? round(($totalLabaKotor / $totalPemasukan) * 100, 1) : 0;
+        $totalTransaksi = $rekapData->sum('transaksi');
+        $hasilBersih = $totalPemasukan - $totalPengeluaran;
+        $marginBersih = $totalPemasukan > 0 ? round(($hasilBersih / $totalPemasukan) * 100, 1) : 0;
+        $rataRataPemasukan = $rekapData->count() > 0 ? (int) round($totalPemasukan / $rekapData->count()) : 0;
+        $rataRataTransaksi = $totalTransaksi > 0 ? (int) round($totalPemasukan / $totalTransaksi) : 0;
 
-        return [
+        // Perbandingan vs periode sebelumnya (durasi sama tepat sebelum tanggal mulai)
+        $durasiHari = $tanggalMulai->diffInDays($tanggalSelesai) + 1;
+        $prevSelesai = $tanggalMulai->copy()->subDay()->endOfDay();
+        $prevMulai = $tanggalMulai->copy()->subDays($durasiHari)->startOfDay();
+        $prevPemasukan = Order::sukses()->antaraTanggal($prevMulai, $prevSelesai)->sum('total_amount');
+        $prevPengeluaran = Pengeluaran::whereBetween('date', [$prevMulai->format('Y-m-d'), $prevSelesai->format('Y-m-d')])->sum('amount');
+        $prevHasil = $prevPemasukan - $prevPengeluaran;
+        $selisihHasil = $hasilBersih - $prevHasil;
+
+        // Menu terlaris & tersepi di periode ini
+        $menuTerlaris = $this->ambilProdukTerlaris($tanggalMulai, $tanggalSelesai, 5);
+        $menuTersepi = OrderDetail::whereHas('order', function ($q) use ($tanggalMulai, $tanggalSelesai) {
+            $q->sukses()->antaraTanggal($tanggalMulai, $tanggalSelesai);
+        })
+            ->with(['item' => fn ($q) => $q->withTrashed()])
+            ->selectRaw('item_id, SUM(quantity) as total_qty, SUM(subtotal) as total_revenue')
+            ->groupBy('item_id')
+            ->orderBy('total_qty')
+            ->limit(3)
+            ->get();
+
+        $totalTunai = (int) ($metodeBayar->get('cash')->total ?? 0);
+        $totalQris = (int) ($metodeBayar->get('qris')->total ?? 0);
+        $jumlahTunai = (int) ($metodeBayar->get('cash')->jumlah ?? 0);
+        $jumlahQris = (int) ($metodeBayar->get('qris')->jumlah ?? 0);
+
+        // Peringatan stok produk menipis
+        $stokMenipis = Item::where('stock', '<', 5)->orderBy('stock')->limit(5)->get();
+
+        $result = [
             'rekapData' => $rekapData,
             'totalPemasukan' => $totalPemasukan,
             'totalPengeluaran' => $totalPengeluaran,
-            'totalHpp' => $totalHpp,
-            'totalLabaKotor' => $totalLabaKotor,
-            'labaBersih' => $labaBersih,
-            'profitMargin' => $marginKeuntungan, // Tetap gunakan key 'profitMargin' agar aman di rekap.blade.php lama
-            'marginKotor' => $marginKotor,
+            'totalTransaksi' => $totalTransaksi,
+            'hasilBersih' => $hasilBersih,
+            'profitMargin' => $marginBersih,
+            'marginBersih' => $marginBersih,
+            'rataRataPemasukan' => $rataRataPemasukan,
+            'rataRataTransaksi' => $rataRataTransaksi,
+            'hariUntung' => $hariUntung,
             'chartLabels' => $labelGrafik,
             'chartPemasukan' => $pemasukanGrafik,
             'chartPengeluaran' => $pengeluaranGrafik,
-            'chartLaba' => $labaGrafik,
+            'chartLaba' => $hasilGrafik,
+            'chartHasil' => $hasilGrafik,
             'bestDay' => $hariTerbaik,
-            'worstDay' => $hariTerburuk
+            'worstDay' => $hariTerburuk,
+            'prevPemasukan' => $prevPemasukan,
+            'prevPengeluaran' => $prevPengeluaran,
+            'prevHasil' => $prevHasil,
+            'selisihHasil' => $selisihHasil,
+            'menuTerlaris' => $menuTerlaris,
+            'produkTerlaris' => $menuTerlaris,
+            'menuTersepi' => $menuTersepi,
+            'totalTunai' => $totalTunai,
+            'totalQris' => $totalQris,
+            'jumlahTunai' => $jumlahTunai,
+            'jumlahQris' => $jumlahQris,
+            'pengeluaranPerKategori' => $pengeluaranPerKategori,
+            'stokMenipis' => $stokMenipis,
         ];
+
+        return $result;
     }
 
-    /**
-     * Mengambil data laporan harian lengkap yang digunakan di View dan Ekspor PDF.
-     */
     private function getDailyData(Carbon $date): array
     {
         return $this->ambilDataHarian($date);
@@ -335,28 +348,21 @@ class ReportController extends Controller
     private function ambilDataHarian(Carbon $tanggal): array
     {
         $pesanan = Order::perTanggal($tanggal)->sukses()->get();
-        $stokBarang = Inventory::whereDate('date', $tanggal)->get();
         $pengeluaran = Pengeluaran::whereDate('date', $tanggal)->get();
 
         $totalPenjualan = $pesanan->sum('total_amount');
         $totalPengeluaran = $pengeluaran->sum('amount');
-        $labaBersih = $totalPenjualan - $totalPengeluaran;
+        $hasilBersih = $totalPenjualan - $totalPengeluaran;
 
-        // Rincian penjualan per item/menu hari ini (dengan kalkulasi HPP)
-        $rincianBarang = OrderDetail::whereHas('order', function($q) use ($tanggal) {
-                $q->perTanggal($tanggal)->sukses();
-            })
-            ->with(['item' => fn($q) => $q->withTrashed()])
-            ->selectRaw('item_id, SUM(quantity) as total_qty, SUM(subtotal) as total_amount, SUM(hpp * quantity) as total_hpp')
+        $rincianBarang = OrderDetail::whereHas('order', function ($q) use ($tanggal) {
+            $q->perTanggal($tanggal)->sukses();
+        })
+            ->with(['item' => fn ($q) => $q->withTrashed()])
+            ->selectRaw('item_id, SUM(quantity) as total_qty, SUM(subtotal) as total_amount')
             ->groupBy('item_id')
             ->orderByDesc('total_amount')
             ->get();
 
-        // Hitung laba kotor total hari ini (penjualan - HPP)
-        $totalHpp = $rincianBarang->sum('total_hpp');
-        $labaKotor = $totalPenjualan - $totalHpp;
-
-        // Rincian penjualan per kasir yang melayani
         $rincianKasir = Order::perTanggal($tanggal)->sukses()
             ->with('user')
             ->selectRaw('user_id, COUNT(*) as total_transactions, SUM(total_amount) as total_amount')
@@ -364,32 +370,34 @@ class ReportController extends Controller
             ->orderByDesc('total_amount')
             ->get();
 
-        // Mengambil data perbandingan penjualan dengan hari kemarin
+        $pengeluaranPerKategori = $pengeluaran->groupBy('category')->map(fn ($rows) => $rows->sum('amount'));
+
+        $stokMenipis = Item::where('stock', '<', 5)->orderBy('stock')->limit(5)->get();
+
         $kemarin = $tanggal->copy()->subDay();
         $penjualanKemarin = Order::perTanggal($kemarin)->sukses()->sum('total_amount');
 
-        $pertumbuhanPenjualan = $penjualanKemarin > 0 
-            ? round((($totalPenjualan - $penjualanKemarin) / $penjualanKemarin) * 100, 1) 
+        $pertumbuhanPenjualan = $penjualanKemarin > 0
+            ? round((($totalPenjualan - $penjualanKemarin) / $penjualanKemarin) * 100, 1)
             : ($totalPenjualan > 0 ? 100 : 0);
 
-        return [
+        $result = [
             'pesanan' => $pesanan,
-            'stokBarang' => $stokBarang,
             'pengeluaran' => $pengeluaran,
+            'pengeluaranPerKategori' => $pengeluaranPerKategori,
+            'stokMenipis' => $stokMenipis,
             'totalPenjualan' => $totalPenjualan,
             'totalPengeluaran' => $totalPengeluaran,
-            'totalHpp' => $totalHpp,
-            'labaKotor' => $labaKotor,
-            'labaBersih' => $labaBersih,
+            'hasilBersih' => $hasilBersih,
             'rincianBarang' => $rincianBarang,
             'rincianKasir' => $rincianKasir,
             'penjualanKemarin' => $penjualanKemarin,
-            'pertumbuhanPenjualan' => $pertumbuhanPenjualan
+            'pertumbuhanPenjualan' => $pertumbuhanPenjualan,
         ];
+
+        return $result;
     }
-    /**
-     * Mengambil item dengan total kuantitas penjualan tertinggi dalam rentang tanggal.
-     */
+
     private function getTopSellingItems(Carbon $startDate, Carbon $endDate, int $limit = 5)
     {
         return $this->ambilProdukTerlaris($startDate, $endDate, $limit);
@@ -397,11 +405,11 @@ class ReportController extends Controller
 
     private function ambilProdukTerlaris(Carbon $tanggalMulai, Carbon $tanggalSelesai, int $limit = 5)
     {
-        return OrderDetail::whereHas('order', function($q) use ($tanggalMulai, $tanggalSelesai) {
-                $q->sukses()->antaraTanggal($tanggalMulai, $tanggalSelesai);
-            })
-            ->with(['item' => fn($q) => $q->withTrashed()])
-            ->selectRaw('item_id, SUM(quantity) as total_qty, SUM(subtotal) as total_revenue, SUM(hpp * quantity) as total_hpp')
+        return OrderDetail::whereHas('order', function ($q) use ($tanggalMulai, $tanggalSelesai) {
+            $q->sukses()->antaraTanggal($tanggalMulai, $tanggalSelesai);
+        })
+            ->with(['item' => fn ($q) => $q->withTrashed()])
+            ->selectRaw('item_id, SUM(quantity) as total_qty, SUM(subtotal) as total_revenue')
             ->groupBy('item_id')
             ->orderByDesc('total_revenue')
             ->limit($limit)

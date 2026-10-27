@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Laporan Penjualan')
-@section('page_title', 'Laporan Penjualan')
+@section('page_title', 'Laporan penjualan')
 
 @section('content')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -11,9 +11,9 @@
     document.addEventListener("DOMContentLoaded", function() {
         Swal.fire({
             icon: 'success',
-            title: 'Berhasil!',
+            title: 'Berhasil',
             text: '{!! session("success") !!}',
-            confirmButtonColor: '#ea580c',
+            confirmButtonColor: '#931b13',
         });
     });
 </script>
@@ -24,238 +24,185 @@
     document.addEventListener("DOMContentLoaded", function() {
         Swal.fire({
             icon: 'error',
-            title: 'Gagal!',
+            title: 'Gagal',
             text: '{!! session("error") !!}',
-            confirmButtonColor: '#d33',
+            confirmButtonColor: '#931b13',
         });
     });
 </script>
 @endif
 
 {{-- Filter --}}
-<div class="no-print flex flex-col gap-4 lg:gap-6 mb-6 lg:mb-8">
-    <div class="bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm">
+<div class="no-print flex flex-col gap-4 mb-5">
+    <div class="card card-pad">
         <form action="{{ route('reports.index') }}" method="GET" class="flex flex-col gap-4">
-            {{-- Quick Date Presets --}}
             @php
                 $isBulanLalu = $tanggalMulai->isSameDay(now()->subMonth()->startOfMonth()) && $tanggalSelesai->isSameDay(now()->subMonth()->endOfMonth());
             @endphp
-            <div class="flex flex-wrap gap-2">
-                <span class="text-[10px] font-bold text-gray-400 uppercase self-center mr-1">Cepat:</span>
-
-                {{-- Hari Ini --}}
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-[13px] text-[#8a8179] mr-1">Rentang cepat:</span>
                 <a href="{{ route('reports.index', ['start_date' => now()->format('Y-m-d'), 'end_date' => now()->format('Y-m-d')]) }}"
-                   @if($tanggalMulai->format('Y-m-d') === now()->format('Y-m-d') && $tanggalSelesai->format('Y-m-d') === now()->format('Y-m-d'))
-                       class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-brand-600 text-white shadow-md"
-                   @else
-                       class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-gray-100 text-gray-600 hover:bg-brand-50 hover:text-brand-600"
-                   @endif>
-                    Hari Ini
+                   class="preset {{ $tanggalMulai->format('Y-m-d') === now()->format('Y-m-d') && $tanggalSelesai->format('Y-m-d') === now()->format('Y-m-d') ? 'is-active' : '' }}">
+                    Hari ini
                 </a>
-
-                {{-- 7 Hari --}}
                 <a href="{{ route('reports.index', ['start_date' => now()->subDays(6)->format('Y-m-d'), 'end_date' => now()->format('Y-m-d')]) }}"
-                   @if($tanggalMulai->format('Y-m-d') === now()->subDays(6)->format('Y-m-d') && $tanggalSelesai->format('Y-m-d') === now()->format('Y-m-d'))
-                       class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-brand-600 text-white shadow-md"
-                   @else
-                       class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-gray-100 text-gray-600 hover:bg-brand-50 hover:text-brand-600"
-                   @endif>
-                    7 Hari
+                   class="preset {{ $tanggalMulai->format('Y-m-d') === now()->subDays(6)->format('Y-m-d') && $tanggalSelesai->format('Y-m-d') === now()->format('Y-m-d') ? 'is-active' : '' }}">
+                    7 hari
                 </a>
-
-                {{-- Bulan Ini --}}
                 <a href="{{ route('reports.index', ['start_date' => now()->startOfMonth()->format('Y-m-d'), 'end_date' => now()->format('Y-m-d')]) }}"
-                   @if($tanggalMulai->format('Y-m-d') === now()->startOfMonth()->format('Y-m-d') && $tanggalSelesai->format('Y-m-d') === now()->format('Y-m-d'))
-                       class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-brand-600 text-white shadow-md"
-                   @else
-                       class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-gray-100 text-gray-600 hover:bg-brand-50 hover:text-brand-600"
-                   @endif>
-                    Bulan Ini
+                   class="preset {{ $tanggalMulai->format('Y-m-d') === now()->startOfMonth()->format('Y-m-d') && $tanggalSelesai->format('Y-m-d') === now()->format('Y-m-d') ? 'is-active' : '' }}">
+                    Bulan ini
                 </a>
-
-                {{-- Bulan Lalu --}}
                 <a href="{{ route('reports.index', ['start_date' => now()->subMonth()->startOfMonth()->format('Y-m-d'), 'end_date' => now()->subMonth()->endOfMonth()->format('Y-m-d')]) }}"
-                   @if($tanggalMulai->format('Y-m-d') === now()->subMonth()->startOfMonth()->format('Y-m-d') && $tanggalSelesai->format('Y-m-d') === now()->subMonth()->endOfMonth()->format('Y-m-d'))
-                       class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-brand-600 text-white shadow-md"
-                   @else
-                       class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-gray-100 text-gray-600 hover:bg-brand-50 hover:text-brand-600"
-                   @endif>
-                    Bulan Lalu
+                   class="preset {{ $isBulanLalu ? 'is-active' : '' }}">
+                    Bulan lalu
                 </a>
             </div>
-            {{-- Date Inputs --}}
-            <div class="flex flex-col sm:flex-row flex-wrap items-end gap-3 lg:gap-4">
+            <div class="flex flex-col sm:flex-row flex-wrap items-end gap-3">
                 <div class="flex-1 min-w-0 w-full sm:w-auto">
-                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Mulai Dari</label>
-                    <input type="date" name="start_date" value="{{ $tanggalMulai->format('Y-m-d') }}" class="w-full px-4 py-2 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-brand-500 outline-none text-sm">
+                    <label class="block text-[13px] text-[#57504a] mb-1.5">Mulai dari</label>
+                    <input type="date" name="start_date" value="{{ $tanggalMulai->format('Y-m-d') }}" class="field">
                 </div>
                 <div class="flex-1 min-w-0 w-full sm:w-auto">
-                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Sampai Dengan</label>
-                    <input type="date" name="end_date" value="{{ $tanggalSelesai->format('Y-m-d') }}" class="w-full px-4 py-2 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-brand-500 outline-none text-sm">
+                    <label class="block text-[13px] text-[#57504a] mb-1.5">Sampai dengan</label>
+                    <input type="date" name="end_date" value="{{ $tanggalSelesai->format('Y-m-d') }}" class="field">
                 </div>
-                <button type="submit" class="w-full sm:w-auto bg-brand-700 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-brand-800 transition-colors shadow-lg shadow-brand-700/20">
-                    Filter Data
+                <button type="submit" class="btn-ink w-full sm:w-auto px-6 py-2.5 text-sm">
+                    Terapkan filter
                 </button>
             </div>
         </form>
     </div>
 
-    {{-- Summary Cards --}}
-    <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 lg:gap-4">
-        <div class="bg-brand-700 p-4 lg:p-6 rounded-2xl lg:rounded-3xl shadow-lg shadow-brand-700/20 text-white flex flex-col justify-center animate-fade-in-up">
-            <p class="text-[10px] lg:text-xs font-bold opacity-70 uppercase tracking-widest mb-1">Total Pendapatan</p>
-            <h3 class="text-lg lg:text-2xl font-bold" data-counter="{{ $totalPendapatan }}">Rp {{ number_format($totalPendapatan, 0, ',', '.') }}</h3>
-            <p class="text-[10px] mt-2 opacity-60 italic">{{ $totalTransaksi }} Transaksi Berhasil</p>
-        </div>
-        <div class="bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-amber-200 shadow-sm flex flex-col justify-center animate-fade-in-up stagger-1">
-            <p class="text-[10px] lg:text-xs font-bold text-amber-600 uppercase tracking-widest mb-1">Total HPP</p>
-            <h3 class="text-lg lg:text-2xl font-bold text-amber-600">Rp {{ number_format($totalHpp ?? 0, 0, ',', '.') }}</h3>
-            <p class="text-[10px] mt-2 text-gray-400 italic">Modal produk terjual</p>
-        </div>
-        <div class="bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-blue-200 shadow-sm flex flex-col justify-center animate-fade-in-up stagger-2">
-            <p class="text-[10px] lg:text-xs font-bold text-blue-600 uppercase tracking-widest mb-1">Laba Kotor</p>
-            <h3 class="text-lg lg:text-2xl font-bold text-blue-600">Rp {{ number_format($labaKotor ?? 0, 0, ',', '.') }}</h3>
-            <p class="text-[10px] mt-2 text-gray-400 italic">Sebelum pengeluaran</p>
-        </div>
-        <div class="bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center animate-fade-in-up stagger-1">
-            <p class="text-[10px] lg:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Rata-rata Transaksi</p>
-            <h3 class="text-lg lg:text-2xl font-bold text-gray-900" data-counter="{{ $rataRataTransaksi }}">Rp {{ number_format($rataRataTransaksi, 0, ',', '.') }}</h3>
-            <p class="text-[10px] mt-2 text-gray-400 italic">Per transaksi</p>
-        </div>
-        <div class="bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center animate-fade-in-up stagger-2">
-            <p class="text-[10px] lg:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Metode Bayar</p>
-            <div class="flex items-center gap-2 mt-1">
-                <span class="px-2 py-0.5 rounded bg-orange-50 text-orange-600 text-[10px] font-bold">TUNAI {{ $jumlahTunai }}</span>
-                <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-600 text-[10px] font-bold">QRIS {{ $jumlahQris }}</span>
+    {{-- Ringkasan --}}
+    <div class="card overflow-hidden rise">
+        <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-[#f1ebe0]">
+            <div class="p-5">
+                <p class="metric-label">Total pendapatan</p>
+                <p class="metric-value text-lg lg:text-xl mt-1.5" data-counter="{{ $totalPendapatan }}">Rp {{ number_format($totalPendapatan, 0, ',', '.') }}</p>
+                <p class="text-xs text-[#8a8179] mt-1.5">{{ $totalTransaksi }} transaksi berhasil</p>
             </div>
-            <p class="text-[10px] mt-2 text-gray-400 italic">Breakdown metode</p>
-        </div>
-        <div class="bg-red-500 p-4 lg:p-6 rounded-2xl lg:rounded-3xl shadow-lg shadow-red-500/20 text-white flex flex-col justify-center animate-fade-in-up stagger-3">
-            <p class="text-[10px] lg:text-xs font-bold opacity-70 uppercase tracking-widest mb-1">Dibatalkan</p>
-            <h3 class="text-lg lg:text-2xl font-bold">{{ $totalDibatalkan }}</h3>
-            <p class="text-[10px] mt-2 opacity-60 italic">Transaksi dibatalkan</p>
+            <div class="p-5">
+                <p class="metric-label">Rata-rata transaksi</p>
+                <p class="metric-value text-lg lg:text-xl mt-1.5" data-counter="{{ $rataRataTransaksi }}">Rp {{ number_format($rataRataTransaksi, 0, ',', '.') }}</p>
+                <p class="text-xs text-[#8a8179] mt-1.5">Per transaksi</p>
+            </div>
+            <div class="p-5">
+                <p class="metric-label">Metode bayar</p>
+                <p class="metric-value text-lg lg:text-xl mt-1.5 tnum">{{ $jumlahTunai + $jumlahQris }} <span class="text-sm font-sans font-normal text-[#8a8179]">transaksi</span></p>
+                <p class="text-xs text-[#8a8179] mt-1.5">Tunai {{ $jumlahTunai }} · QRIS {{ $jumlahQris }}</p>
+            </div>
+            <div class="p-5 bg-[#17110c]">
+                <p class="text-[13px] text-stone-400">Dibatalkan</p>
+                <p class="metric-value text-lg lg:text-xl mt-1.5 text-[#f7f1e6] tnum">{{ $totalDibatalkan }}</p>
+                <p class="text-xs text-stone-500 mt-1.5">Transaksi dibatalkan</p>
+            </div>
         </div>
     </div>
 
-    {{-- Mini Revenue Chart + Top Items --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-        {{-- Mini Revenue Chart --}}
-        <div class="lg:col-span-2 bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-sm font-bold text-gray-900">Tren Pendapatan Harian</h3>
-                <span class="text-[10px] font-bold text-brand-700 bg-brand-50 px-2 py-1 rounded-lg">{{ $tanggalMulai->format('d M') }} - {{ $tanggalSelesai->format('d M Y') }}</span>
+    {{-- Grafik + terlaris --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2 card card-pad">
+            <div class="flex justify-between items-baseline mb-4">
+                <div>
+                    <h3 class="font-display text-[17px] font-semibold tracking-tight">Tren pendapatan harian</h3>
+                    <p class="text-[13px] text-[#8a8179] mt-0.5">{{ $tanggalMulai->format('d M') }} – {{ $tanggalSelesai->format('d M Y') }}</p>
+                </div>
             </div>
             <div class="relative h-48 lg:h-56">
                 <canvas id="revenueChart"></canvas>
             </div>
         </div>
-        {{-- Top Items --}}
-        <div class="bg-white p-4 lg:p-6 rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm">
-            <h3 class="text-sm font-bold text-gray-900 mb-4">🏆 Laporan Produk Terlaris</h3>
+        <div class="card card-pad">
+            <h3 class="font-display text-[17px] font-semibold tracking-tight">Produk terlaris</h3>
+            <p class="text-[13px] text-[#8a8179] mt-0.5 mb-3">Periode terpilih</p>
             @if($produkTerlaris->count() > 0)
-            <div class="space-y-3">
+            <div class="divide-y divide-[#f1ebe0]">
                 @foreach($produkTerlaris as $i => $topItem)
-                @php
-                    $topHpp = $topItem->total_hpp ?? 0;
-                    $topLaba = $topItem->total_revenue - $topHpp;
-                    $topMargin = $topItem->total_revenue > 0 && $topHpp > 0 ? round(($topLaba / $topItem->total_revenue) * 100, 1) : null;
-                @endphp
-                <div class="flex items-center gap-3">
-                    <span class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shrink-0 {{ $i === 0 ? 'bg-amber-100 text-amber-700' : ($i === 1 ? 'bg-gray-100 text-gray-600' : 'bg-orange-50 text-orange-400') }}">
-                        {{ $i + 1 }}
-                    </span>
+                <div class="flex items-center gap-3 py-2.5">
+                    <span class="font-display text-lg font-semibold tnum w-6 shrink-0 {{ $i === 0 ? 'text-[#c9a227]' : 'text-[#b3a897]' }}">{{ $i + 1 }}</span>
                     <div class="flex-1 min-w-0">
-                        <p class="text-xs font-bold text-gray-900 truncate">{{ $topItem->item->name ?? 'Item Terhapus' }}</p>
-                        <div class="flex items-center gap-2">
-                            <p class="text-[10px] text-gray-400">{{ $topItem->total_qty }} terjual</p>
-                            @if($topMargin !== null)
-                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded {{ $topMargin >= 40 ? 'bg-green-100 text-green-700' : ($topMargin >= 20 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700') }}">{{ $topMargin }}%</span>
-                            @endif
-                        </div>
+                        <p class="text-[13px] font-medium truncate">{{ $topItem->item->name ?? 'Item terhapus' }}</p>
+                        <p class="text-xs text-[#8a8179]">{{ $topItem->total_qty }} terjual</p>
                     </div>
-                    <span class="text-xs font-bold text-brand-700">Rp {{ number_format($topItem->total_revenue, 0, ',', '.') }}</span>
+                    <span class="text-[13px] font-semibold tnum">Rp {{ number_format($topItem->total_revenue, 0, ',', '.') }}</span>
                 </div>
                 @endforeach
             </div>
             @else
-            <p class="text-xs text-gray-400 italic text-center py-6">Belum ada data penjualan.</p>
+            <p class="text-[13px] text-[#8a8179] text-center py-6">Belum ada data penjualan.</p>
             @endif
         </div>
     </div>
 
-    {{-- Export & Search Bar --}}
+    {{-- Cari + filter status + export --}}
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div class="relative w-full sm:w-72">
-            <input type="text" id="searchInput" placeholder="Cari invoice, pelanggan..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-100 bg-white text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-all">
-            <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <input type="text" id="searchInput" placeholder="Cari invoice, pelanggan…" class="field pl-10">
+            <svg class="w-4 h-4 text-[#b3a897] absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </div>
-        <div class="flex items-center gap-2">
-            {{-- Status filter pills --}}
-            <button type="button" data-filter="all" class="filter-pill active px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-900 text-white transition-all">Semua</button>
-            <button type="button" data-filter="success" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-600 transition-all">Sukses</button>
-            <button type="button" data-filter="cancelled" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all">Batal</button>
-            <a href="{{ route('reports.exportSalesPdf', ['start_date' => $tanggalMulai->format('Y-m-d'), 'end_date' => $tanggalSelesai->format('Y-m-d')]) }}" class="flex items-center gap-2 bg-gray-900 hover:bg-black text-white font-bold text-xs lg:text-sm px-5 py-2.5 rounded-xl transition-colors shadow-lg">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        <div class="flex flex-wrap items-center gap-2">
+            <button type="button" data-filter="all" class="filter-pill active">Semua</button>
+            <button type="button" data-filter="success" class="filter-pill">Sukses</button>
+            <button type="button" data-filter="cancelled" class="filter-pill">Batal</button>
+            <a href="{{ route('reports.exportSalesPdf', ['start_date' => $tanggalMulai->format('Y-m-d'), 'end_date' => $tanggalSelesai->format('Y-m-d')]) }}" class="btn-ink text-[13px] px-4 py-2.5 inline-flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 Export PDF
             </a>
         </div>
     </div>
 </div>
 
-{{-- Tabel Laporan --}}
-<div class="bg-white rounded-2xl lg:rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+{{-- Tabel laporan --}}
+<div class="table-shell bg-white">
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse min-w-[700px]" id="salesTable">
-            <thead class="bg-gray-50 border-b border-gray-100 sticky top-0 z-10">
+            <thead>
                 <tr>
-                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-400 uppercase">No</th>
-                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-400 uppercase">Waktu & Invoice</th>
-                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-400 uppercase">Pelanggan</th>
-                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-400 uppercase">Detail Pesanan</th>
-                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-400 uppercase">Metode</th>
-                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-400 uppercase">Status</th>
-                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-400 uppercase text-right">Total</th>
-                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-400 uppercase text-center">Aksi</th>
+                    <th class="px-4 lg:px-6 py-3.5 text-[11px] font-semibold text-[#7a7268]">No</th>
+                    <th class="px-4 lg:px-6 py-3.5 text-[11px] font-semibold text-[#7a7268]">Waktu & invoice</th>
+                    <th class="px-4 lg:px-6 py-3.5 text-[11px] font-semibold text-[#7a7268]">Pelanggan</th>
+                    <th class="px-4 lg:px-6 py-3.5 text-[11px] font-semibold text-[#7a7268]">Detail pesanan</th>
+                    <th class="px-4 lg:px-6 py-3.5 text-[11px] font-semibold text-[#7a7268]">Metode</th>
+                    <th class="px-4 lg:px-6 py-3.5 text-[11px] font-semibold text-[#7a7268]">Status</th>
+                    <th class="px-4 lg:px-6 py-3.5 text-[11px] font-semibold text-[#7a7268] text-right">Total</th>
+                    <th class="px-4 lg:px-6 py-3.5 text-[11px] font-semibold text-[#7a7268] text-center">Aksi</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
+            <tbody class="divide-y divide-[#f1ebe0]">
                 @forelse($pesanan as $index => $order)
-                <tr class="hover:bg-gray-50/50 transition-colors {{ $order->status === 'cancelled' ? 'opacity-60' : '' }} table-row" 
+                <tr class="table-row-hover {{ $order->status === 'cancelled' ? 'opacity-60' : '' }} table-row"
                     data-status="{{ $order->status }}"
                     data-search="{{ strtolower($order->invoice_number . ' ' . ($order->customer_name ?? 'Pelanggan Umum') . ' ' . $order->payment_method) }}">
-                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-500">{{ $pesanan->firstItem() + $index }}</td>
-                    <td class="px-3 lg:px-6 py-3 lg:py-4">
-                        <p class="text-xs lg:text-sm font-bold text-gray-900">{{ $order->invoice_number }}</p>
-                        <p class="text-[10px] text-gray-400 uppercase">{{ $order->created_at->format('d M Y, H:i') }}</p>
+                    <td class="px-4 lg:px-6 py-3.5 text-[13px] text-[#8a8179] tnum">{{ $pesanan->firstItem() + $index }}</td>
+                    <td class="px-4 lg:px-6 py-3.5">
+                        <p class="text-[13px] font-semibold">{{ $order->invoice_number }}</p>
+                        <p class="text-xs text-[#8a8179]">{{ $order->created_at->format('d M Y, H:i') }}</p>
                     </td>
-                    <td class="px-3 lg:px-6 py-3 lg:py-4">
-                        <p class="text-xs lg:text-sm font-medium text-gray-700">{{ $order->customer_name ?? 'Pelanggan Umum' }}</p>
-                    </td>
-                    <td class="px-3 lg:px-6 py-3 lg:py-4">
-                        <div class="max-w-[200px] lg:max-w-[250px]">
+                    <td class="px-4 lg:px-6 py-3.5 text-[13px]">{{ $order->customer_name ?? 'Pelanggan umum' }}</td>
+                    <td class="px-4 lg:px-6 py-3.5">
+                        <div class="max-w-[200px] lg:max-w-[250px] text-xs text-[#57504a]">
                             @foreach($order->orderDetails as $detail)
-                                <span class="text-[10px] lg:text-xs text-gray-500">{{ $detail->item->name }} (x{{ $detail->quantity }}){{ !$loop->last ? ',' : '' }} </span>
+                                <span>{{ $detail->item->name }} (×{{ $detail->quantity }}){{ !$loop->last ? ',' : '' }} </span>
                             @endforeach
                         </div>
                     </td>
-                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-center">
-                        <span class="px-2 py-1 rounded text-[10px] font-bold uppercase {{ $order->payment_method == 'qris' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600' }}">
-                            {{ $order->payment_method }}
-                        </span>
+                    <td class="px-4 lg:px-6 py-3.5">
+                        <span class="pill {{ $order->payment_method == 'qris' ? 'pill-info' : 'pill-muted' }}">{{ $order->payment_method == 'qris' ? 'QRIS' : 'Tunai' }}</span>
                     </td>
-                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-center">
+                    <td class="px-4 lg:px-6 py-3.5">
                         @if($order->status === 'success')
-                            <span class="px-2 lg:px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-green-50 text-green-600">Sukses</span>
+                            <span class="pill pill-success">Sukses</span>
                         @else
-                            <span class="px-2 lg:px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-red-50 text-red-500">Dibatalkan</span>
+                            <span class="pill pill-danger">Dibatalkan</span>
                         @endif
                     </td>
-                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-right">
-                        <p class="text-xs lg:text-sm font-bold {{ $order->status === 'cancelled' ? 'text-gray-400 line-through' : 'text-gray-900' }}">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</p>
+                    <td class="px-4 lg:px-6 py-3.5 text-right">
+                        <p class="text-[13px] font-semibold tnum {{ $order->status === 'cancelled' ? 'text-[#b3a897] line-through' : '' }}">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</p>
                     </td>
-                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-center">
+                    <td class="px-4 lg:px-6 py-3.5 text-center">
                         @if($order->status === 'success')
-                            <button type="button" onclick="confirmCancel({{ $order->id }}, '{{ $order->invoice_number }}')" class="px-2 lg:px-3 py-1 lg:py-1.5 rounded-lg bg-red-50 text-red-500 text-[10px] lg:text-xs font-bold hover:bg-red-100 transition-colors">
+                            <button type="button" onclick="confirmCancel({{ $order->id }}, '{{ $order->invoice_number }}')" class="text-[13px] font-medium text-[#931b13] hover:underline">
                                 Batalkan
                             </button>
                             <form id="cancel-form-{{ $order->id }}" action="{{ route('orders.cancel', $order->id) }}" method="POST" class="hidden">
@@ -263,14 +210,14 @@
                                 @method('PATCH')
                             </form>
                         @else
-                            <span class="text-xs text-gray-400 italic">—</span>
+                            <span class="text-[13px] text-[#b3a897]">—</span>
                         @endif
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="px-6 py-12 text-center text-gray-400 italic">
-                        Tidak ada transaksi ditemukan pada rentang tanggal ini.
+                    <td colspan="8" class="px-6 py-12 text-center text-[#8a8179] text-sm">
+                        Tidak ada transaksi pada rentang tanggal ini.
                     </td>
                 </tr>
                 @endforelse
@@ -281,7 +228,7 @@
 
 {{-- Pagination --}}
 @if($pesanan->hasPages())
-<div class="mt-4 lg:mt-6">
+<div class="mt-4">
     {{ $pesanan->links() }}
 </div>
 @endif
@@ -290,12 +237,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // --- Mini Revenue Chart ---
         const ctx = document.getElementById('revenueChart').getContext('2d');
-        const isMobile = window.innerWidth < 768;
-        const gradient = ctx.createLinearGradient(0, 0, 0, isMobile ? 200 : 250);
-        gradient.addColorStop(0, 'rgba(194, 65, 12, 0.3)');
-        gradient.addColorStop(1, 'rgba(194, 65, 12, 0.02)');
 
         new Chart(ctx, {
             type: 'line',
@@ -304,16 +246,16 @@
                 datasets: [{
                     label: 'Pendapatan',
                     data: {!! json_encode($dataGrafikMini) !!},
-                    borderColor: '#c2410c',
-                    backgroundColor: gradient,
+                    borderColor: '#1c1410',
+                    backgroundColor: 'rgba(28,20,16,0.06)',
                     fill: true,
                     tension: 0.4,
-                    pointRadius: isMobile ? 2 : 4,
-                    pointBackgroundColor: '#c2410c',
+                    pointRadius: 3,
+                    pointBackgroundColor: '#1c1410',
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2,
-                    pointHoverRadius: 6,
-                    borderWidth: 2.5,
+                    pointHoverRadius: 5,
+                    borderWidth: 2,
                 }]
             },
             options: {
@@ -322,8 +264,8 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: '#1a1a2e',
-                        titleFont: { size: 11, weight: 'bold' },
+                        backgroundColor: '#17110c',
+                        titleFont: { size: 11, weight: '500' },
                         bodyFont: { size: 12 },
                         padding: 12,
                         cornerRadius: 10,
@@ -337,19 +279,22 @@
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: { color: '#f1f5f9', drawBorder: false },
+                        grid: { color: '#f1ebe0' },
+                        border: { display: false },
                         ticks: {
-                            font: { size: isMobile ? 9 : 11 },
+                            font: { size: 11 },
+                            color: '#8a8179',
                             callback: function(value) {
-                                if (value >= 1000000) return 'Rp ' + (value / 1000000).toFixed(1) + 'jt';
-                                if (value >= 1000) return 'Rp ' + (value / 1000).toFixed(0) + 'rb';
-                                return 'Rp ' + value;
+                                if (value >= 1000000) return (value / 1000000).toFixed(1) + ' jt';
+                                if (value >= 1000) return (value / 1000).toFixed(0) + ' rb';
+                                return value;
                             }
                         }
                     },
                     x: {
                         grid: { display: false },
-                        ticks: { font: { size: isMobile ? 8 : 11 }, maxRotation: 45 }
+                        border: { display: false },
+                        ticks: { font: { size: 11 }, color: '#57504a', maxRotation: 45 }
                     }
                 },
                 interaction: { intersect: false, mode: 'index' }
@@ -360,7 +305,7 @@
         document.querySelectorAll('[data-counter]').forEach(el => {
             const target = parseInt(el.dataset.counter);
             if (target <= 0) return;
-            const duration = 1200;
+            const duration = 900;
             const start = performance.now();
             const animate = (now) => {
                 const elapsed = now - start;
@@ -387,13 +332,9 @@
         document.querySelectorAll('.filter-pill').forEach(pill => {
             pill.addEventListener('click', function() {
                 const filter = this.dataset.filter;
-                document.querySelectorAll('.filter-pill').forEach(p => {
-                    p.classList.remove('bg-gray-900', 'text-white', 'active');
-                    p.classList.add('bg-gray-100', 'text-gray-600');
-                });
-                this.classList.remove('bg-gray-100', 'text-gray-600');
-                this.classList.add('bg-gray-900', 'text-white', 'active');
-                
+                document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+
                 document.querySelectorAll('#salesTable tbody .table-row').forEach(row => {
                     if (filter === 'all') {
                         row.style.display = '';
@@ -407,13 +348,13 @@
 
     function confirmCancel(orderId, invoiceNumber) {
         Swal.fire({
-            title: 'Batalkan Transaksi?',
+            title: 'Batalkan transaksi?',
             html: `Transaksi <strong>${invoiceNumber}</strong> akan dibatalkan.<br><span class="text-sm text-gray-500">Tindakan ini tidak dapat dikembalikan.</span>`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Ya, Batalkan!',
+            confirmButtonColor: '#931b13',
+            cancelButtonColor: '#57504a',
+            confirmButtonText: 'Ya, batalkan',
             cancelButtonText: 'Kembali'
         }).then((result) => {
             if (result.isConfirmed) {

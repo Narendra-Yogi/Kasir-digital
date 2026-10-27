@@ -11,6 +11,7 @@ class CategoryController extends Controller
     {
         // Mengambil kategori dengan hitungan jumlah item di dalamnya
         $categories = Category::withCount('items')->latest()->get();
+
         return view('categories.index', compact('categories'));
     }
 
@@ -41,7 +42,7 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
+            'name' => 'required|string|max:255|unique:categories,name,'.$category->id,
         ]);
 
         $category->update([
@@ -60,6 +61,7 @@ class CategoryController extends Controller
         }
 
         $category->delete();
+
         return redirect()->route('categories.index')->with('success', 'Kategori berhasil dihapus.');
     }
 }

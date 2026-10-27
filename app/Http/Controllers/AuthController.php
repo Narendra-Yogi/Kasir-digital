@@ -27,7 +27,7 @@ class AuthController extends Controller
         // Cek kecocokan username dan password di database
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            
+
             // Jika berhasil, arahkan ke halaman kasir
             return redirect()->intended('kasir');
         }
@@ -75,14 +75,14 @@ class AuthController extends Controller
 
             $user = User::where('username', $request->username)->first();
 
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Username tidak ditemukan dalam sistem.',
                 ], 422);
             }
 
-            if (!$user->security_question || !$user->security_answer) {
+            if (! $user->security_question || ! $user->security_answer) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Akun ini belum memiliki pertanyaan keamanan. Silakan hubungi Administrator untuk reset password.',
@@ -104,7 +104,7 @@ class AuthController extends Controller
             $request->validate(['security_answer' => 'required|string']);
 
             $username = $request->session()->get('reset_username');
-            if (!$username) {
+            if (! $username) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Sesi telah kedaluwarsa. Silakan ulangi dari awal.',
@@ -112,7 +112,7 @@ class AuthController extends Controller
             }
 
             $user = User::where('username', $username)->first();
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'success' => false,
                     'message' => 'User tidak ditemukan.',
@@ -120,7 +120,7 @@ class AuthController extends Controller
             }
 
             // Cek jawaban (case-insensitive) — jawaban di-lowercase sebelum dibandingkan
-            if (!Hash::check(strtolower(trim($request->security_answer)), $user->security_answer)) {
+            if (! Hash::check(strtolower(trim($request->security_answer)), $user->security_answer)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Jawaban keamanan salah. Silakan coba lagi.',
@@ -156,18 +156,19 @@ class AuthController extends Controller
         $tokenExpires = $request->session()->get('reset_token_expires');
         $username = $request->session()->get('reset_username');
 
-        if (!$sessionToken || !$username || $request->reset_token !== $sessionToken) {
+        if (! $sessionToken || ! $username || $request->reset_token !== $sessionToken) {
             return back()->withErrors(['reset_token' => 'Token reset tidak valid. Silakan ulangi proses dari awal.']);
         }
 
         if ($tokenExpires && now()->isAfter($tokenExpires)) {
             // Bersihkan session reset
             $request->session()->forget(['reset_token', 'reset_token_expires', 'reset_username']);
+
             return back()->withErrors(['reset_token' => 'Token reset telah kedaluwarsa. Silakan ulangi proses dari awal.']);
         }
 
         $user = User::where('username', $username)->first();
-        if (!$user) {
+        if (! $user) {
             return back()->withErrors(['reset_token' => 'User tidak ditemukan.']);
         }
 

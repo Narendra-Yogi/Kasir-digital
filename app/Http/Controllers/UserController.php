@@ -12,6 +12,7 @@ class UserController extends Controller
     public function index()
     {
         $users = User::latest()->get();
+
         return view('users.index', compact('users'));
     }
 
@@ -85,11 +86,12 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         // Cegah user menghapus akunnya sendiri yang sedang dipakai login
-        if ($user->id === auth()->id) {
+        if ($user->id === auth()->id()) {
             return back()->with('error', 'Anda tidak bisa menghapus akun yang sedang Anda gunakan!');
         }
 
         $user->delete();
+
         return redirect()->route('users.index')->with('success', 'Akun pengguna berhasil dihapus.');
     }
 
