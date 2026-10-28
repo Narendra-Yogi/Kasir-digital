@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PosController extends Controller
 {
@@ -131,6 +132,15 @@ class PosController extends Controller
                 'success' => 'Transaksi sukses! Kembalian: Rp '.number_format($order->change, 0, ',', '.'),
                 'order_id' => $order->id,
             ]);
+        } catch (QueryException $e) {
+            DB::rollBack();
+
+            Log::error('checkout gagal (database)', [
+                'messege' => $e->getMessage(),
+                'user_id' => Auth::id(),
+            ]);
+
+            return back()->with('error', 'Terjadi kesalahan sistem saat memproses transaksi. Coba lagi atau hubungi Administrator.');
         } catch (\Exception $e) {
             DB::rollBack();
 
