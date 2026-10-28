@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Item;
 use App\Models\Order;
 use App\Models\OrderDetail;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -76,17 +77,33 @@ class PosController extends Controller
             if ($change < 0 && $request->payment_method === 'cash') {
                 throw new \Exception('Uang pembayaran kurang dari total tagihan!');
             }
+            // FIX #7: nomor invoice 6 digit + retry otomatis jika tabrakan UNIQUE
+            $order = null;
 
-            $order = Order::create([
-                'invoice_number' => 'INV-'.date('ymd').'-'.rand(1000, 9999),
-                'user_id' => Auth::id(),
-                'customer_name' => $request->customer_name,
-                'total_amount' => $totalAmount,
-                'payment_method' => $request->payment_method,
-                'cash_received' => $request->payment_method === 'qris' ? $totalAmount : $request->cash_received,
-                'change' => $request->payment_method === 'qris' ? 0 : $change,
-                'status' => 'success',
-            ]);
+            for ($attempt = 1; $attempt <= 5; $attempt++) {
+                try {
+                    $order = Order::create([
+                        'invoice_number' => 'INV-'.date('ymd').'-'.str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT),
+                        'user_id' => Auth::id(),
+                        'customer_name' => $request->customer_name,
+                        'total_amount' => $totalAmount,
+                        'payment_method' => $request->payment_method,
+                        'cash_received' => $request->payment_method === 'qris' ? $totalAmount : $request->cash_received,
+                        'change' => $request->payment_method === 'qris' ? 0 : $change,
+                        'status' => 'success',
+                    ]);
+                    break;
+                } catch (QueryException $e) {
+                    // Bukan error duplikat? Lempar ulang agar tertangani oleh catch luar
+                    if (! in_array($e->errorInfo[1] ?? null, [1062, 23505], true)) {
+                        throw $e;
+                    }
+                }
+
+                if (! $order) {
+                    throw new \Exception('Gagal membuat nomor invoice setelah 5 percobaan.');
+                }
+            }
 
             $orderDetails = [];
             foreach ($request->cart as $cartItem) {
