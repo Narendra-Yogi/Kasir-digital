@@ -9,6 +9,9 @@ use App\Models\Pengeluaran;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ReportController extends Controller
 {
@@ -76,14 +79,46 @@ class ReportController extends Controller
 
     public function cancel(Order $order)
     {
-        if ($order->status === 'cancelled') {
+        DB::beginTransaction();
+
+    try {
+        // FIX #8: kunci baris order agar pembatalan paralel tidak dobel-restore
+        $order = Order::whereKey($order->id)->lockForUpdate()->first();
+
+        if (! $order || $order->status === 'cancelled') {
+            DB::rollBack();
+
             return back()->with('error', 'Transaksi ini sudah dibatalkan sebelumnya.');
+        }
+
+        $detail = $order->orderDetails()->get(['item_id', 'quantity']);
+
+        // Kunci baris item (pola sama seperti checkout) sebelum increment stok
+        Item::whereIn('id', $detail->pluck('item_id')->unique())->lockForUpdate()->get();
+
+        foreach ($detail as $row) {
+            // withTrashed: item boleh sudah dihapus, stok tetap dikembalikan
+            Item::withTrashed()->whereKey($row->item_id)->increment('stock', (int) $row->quantity);
         }
 
         $order->update(['status' => 'cancelled']);
 
-        return back()->with('success', 'Transaksi '.$order->invoice_number.' berhasil dibatalkan.');
+        DB::commit();
+    } catch (\Throwable $e) {
+        DB::rollBack();
+
+        Log::error('Gagal membatalkan transaksi', [
+            'order_id' => $order->id,
+            'message' => $e->getMessage(),
+        ]);
+
+        return back()->with('error', 'Gagal membatalkan transaksi. Coba lagi atau hubungi Administrator.');
     }
+
+    Cache::forget('pos_categories'); // segarkan tampilan kasir (FIX #9)
+
+    return back()->with('success', 'Transaksi '.$order->invoice_number.' berhasil dibatalkan dan stok dikembalikan.');
+}
 
     // ========================================================
     //  REKAP HASIL USAHA (pengganti Rekap Laba Rugi)
