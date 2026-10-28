@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class CategoryController extends Controller
 {
@@ -50,6 +51,8 @@ class CategoryController extends Controller
             'updated_by' => $request->user()->id,
         ]);
 
+        Cache::forget('pos_categories');
+
         return redirect()->route('categories.index')->with('success', 'Kategori berhasil diperbarui.');
     }
 
@@ -61,6 +64,8 @@ class CategoryController extends Controller
         }
 
         $category->delete();
+
+        Cache::forget('pos_categories');
 
         return redirect()->route('categories.index')->with('success', 'Kategori berhasil dihapus.');
     }

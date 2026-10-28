@@ -128,6 +128,8 @@ class PosController extends Controller
 
             DB::commit();
 
+            Cache::forget('pos_categories');
+
             return redirect()->route('pos.index')->with([
                 'success' => 'Transaksi sukses! Kembalian: Rp '.number_format($order->change, 0, ',', '.'),
                 'order_id' => $order->id,
