@@ -7,19 +7,22 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Tabel pengguna (admin & kasir) serta tabel sesi autentikasi.
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('pengguna', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('username')->unique();
-            $table->string('password', 255);
-            $table->enum('role', ['admin', 'kasir']);
+            $table->string('name')->comment('Nama lengkap pengguna');
+            $table->string('username')->unique()->comment('Username unik untuk login');
+            $table->string('password', 255)->comment('Password terenkripsi (bcrypt)');
+            $table->enum('role', ['admin', 'kasir'])->comment('Peran akses pengguna');
+            $table->string('security_question')->nullable()->comment('Pertanyaan keamanan untuk reset password mandiri');
+            $table->string('security_answer')->nullable()->comment('Jawaban keamanan terenkripsi (bcrypt)');
             $table->timestamps();
             $table->softDeletes();
 
+            $table->index('role');
             $table->index('created_at');
         });
 
@@ -44,8 +47,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('pengguna');
     }
 };

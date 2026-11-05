@@ -10,6 +10,8 @@ class Category extends Model
 {
     use SoftDeletes;
 
+    protected $table = 'kategori';
+
     protected $fillable = [
         'name',
         'created_by',
@@ -18,6 +20,6 @@ class Category extends Model
 
     public function items(): HasMany
     {
-        return $this->hasMany(Item::class);
+        return $this->hasMany(Item::class, 'category_id');
     }
 }

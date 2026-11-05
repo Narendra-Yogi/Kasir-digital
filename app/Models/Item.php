@@ -10,6 +10,8 @@ class Item extends Model
 {
     use SoftDeletes;
 
+    protected $table = 'menu';
+
     protected $fillable = [
         'category_id',
         'name',
@@ -21,8 +23,17 @@ class Item extends Model
         'updated_by',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'price' => 'integer',
+            'stock' => 'integer',
+            'is_available' => 'boolean',
+        ];
+    }
+
     public function category(): BelongsTo
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class, 'category_id');
     }
 }

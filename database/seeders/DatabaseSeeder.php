@@ -269,7 +269,7 @@ class DatabaseSeeder extends Seeder
                 $status = rand(1, 20) === 1 ? 'cancelled' : 'success';
 
                 $order = Order::create([
-                    'invoice_number' => 'INV-'.$tanggal->format('ymd').'-'.str_pad($invoiceCounter, 4, '0', STR_PAD_LEFT),
+                    'invoice_number' => 'INV-' . $tanggal->format('ymd') . '-' . str_pad($invoiceCounter, 4, '0', STR_PAD_LEFT),
                     'user_id' => $kasirHariIni->id,
                     'customer_name' => rand(0, 1) ? $this->namaAcak() : null,
                     'total_amount' => $totalAmount,
@@ -346,9 +346,31 @@ class DatabaseSeeder extends Seeder
      */
     private function namaAcak(): string
     {
-        $nama = ['Budi', 'Sari', 'Agus', 'Rina', 'Deni', 'Fitri', 'Hendra', 'Maya',
-            'Fajar', 'Dewi', 'Rudi', 'Sinta', 'Eko', 'Lina', 'Wahyu', 'Nisa',
-            'Bagas', 'Putri', 'Galih', 'Ayu', 'Pak RT', 'Bu Warni', 'Mas Ikhsan'];
+        $nama = [
+            'Budi',
+            'Sari',
+            'Agus',
+            'Rina',
+            'Deni',
+            'Fitri',
+            'Hendra',
+            'Maya',
+            'Fajar',
+            'Dewi',
+            'Rudi',
+            'Sinta',
+            'Eko',
+            'Lina',
+            'Wahyu',
+            'Nisa',
+            'Bagas',
+            'Putri',
+            'Galih',
+            'Ayu',
+            'Pak RT',
+            'Bu Warni',
+            'Mas Ikhsan'
+        ];
 
         return $nama[array_rand($nama)];
     }

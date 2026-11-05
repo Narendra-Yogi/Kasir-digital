@@ -17,6 +17,7 @@ class Pengeluaran extends Model
         'amount',
         'notes',
         'created_by',
+        'updated_by',
     ];
 
     /**

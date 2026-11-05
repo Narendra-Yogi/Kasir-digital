@@ -36,7 +36,7 @@ class PosController extends Controller
             'payment_method' => 'required|in:cash,qris',
             'cash_received' => 'required|numeric|min:0',
             'cart' => 'required|array',
-            'cart.*.item_id' => 'required|exists:items,id',
+            'cart.*.item_id' => 'required|exists:menu,id',
             'cart.*.quantity' => 'required|integer|min:1',
             'cart.*.notes' => 'nullable|string|max:255',
         ]);

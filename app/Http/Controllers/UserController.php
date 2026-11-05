@@ -25,7 +25,7 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:users',
+            'username' => 'required|string|max:255|unique:pengguna,username',
             'password' => 'required|string|min:6',
             'role' => 'required|in:admin,kasir',
             'security_question' => 'required|string|max:255',
@@ -53,7 +53,7 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'username' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'username' => ['required', 'string', 'max:255', Rule::unique('pengguna', 'username')->ignore($user->id)],
             'password' => 'nullable|string|min:6', // Password opsional saat diedit
             'role' => 'required|in:admin,kasir',
             'security_question' => 'required|string|max:255',

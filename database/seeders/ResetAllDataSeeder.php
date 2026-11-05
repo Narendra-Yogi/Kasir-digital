@@ -22,12 +22,12 @@ class ResetAllDataSeeder extends Seeder
 
         $tables = [
             // Child tables dulu, lalu parent
-            'order_details',
-            'orders',
+            'detail_pesanan',
+            'pesanan',
             'pengeluaran',
-            'daily_cash_logs',
-            'items',
-            'categories',
+            'buku_kas_harian',
+            'menu',
+            'kategori',
             'sessions',
             'cache',
             'cache_locks',
