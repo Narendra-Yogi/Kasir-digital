@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
+use App\Models\Kategori;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -11,7 +11,7 @@ class CategoryController extends Controller
     public function index()
     {
         // Mengambil kategori dengan hitungan jumlah item di dalamnya
-        $categories = Category::withCount('items')->latest()->get();
+        $categories = Kategori::withCount('items')->latest()->get();
 
         return view('categories.index', compact('categories'));
     }
@@ -27,7 +27,7 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255|unique:kategori,name',
         ]);
 
-        Category::create([
+        Kategori::create([
             'name' => $request->name,
             'created_by' => $request->user()->id,
         ]);
@@ -35,12 +35,12 @@ class CategoryController extends Controller
         return redirect()->route('categories.index')->with('success', 'Kategori berhasil ditambahkan.');
     }
 
-    public function edit(Category $category)
+    public function edit(Kategori $category)
     {
         return view('categories.edit', compact('category'));
     }
 
-    public function update(Request $request, Category $category)
+    public function update(Request $request, Kategori $category)
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:kategori,name,'.$category->id,
@@ -56,7 +56,7 @@ class CategoryController extends Controller
         return redirect()->route('categories.index')->with('success', 'Kategori berhasil diperbarui.');
     }
 
-    public function destroy(Category $category)
+    public function destroy(Kategori $category)
     {
         // Cek apakah kategori masih memiliki item
         if ($category->items()->count() > 0) {

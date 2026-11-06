@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\Item;
-use App\Models\Order;
-use App\Models\OrderDetail;
+use App\Models\DetailPesanan;
+use App\Models\Menu;
 use App\Models\Pengeluaran;
-use App\Models\User;
+use App\Models\Pengguna;
+use App\Models\Pesanan;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Cache;
@@ -115,9 +115,9 @@ class DemoDataSeeder extends Seeder
         DB::table('pengeluaran')->delete();
         DB::table('buku_kas_harian')->delete();
 
-        $admin = User::where('role', 'admin')->orderBy('id')->first();
-        $kasir = User::where('role', 'kasir')->orderBy('id')->first() ?? $admin;
-        $menu = Item::all()->keyBy('name');
+        $admin = Pengguna::where('role', 'admin')->orderBy('id')->first();
+        $kasir = Pengguna::where('role', 'kasir')->orderBy('id')->first() ?? $admin;
+        $menu = Menu::all()->keyBy('name');
 
         // ============================================================
         // 2. TRANSAKSI SESUAI JADWAL
@@ -137,8 +137,8 @@ class DemoDataSeeder extends Seeder
             $invoiceCounter++;
 
             // Instansiasi langsung agar created_at/updated_at historis terisi
-            // (kolom timestamp tidak berada di $fillable Order).
-            $order = new Order;
+            // (kolom timestamp tidak berada di $fillable Pesanan).
+            $order = new Pesanan;
             $order->invoice_number = $invoice;
             $order->user_id = ($invoiceCounter % 2 === 0 ? $kasir : $admin)->id;
             $order->customer_name = $pelanggan;
@@ -173,7 +173,7 @@ class DemoDataSeeder extends Seeder
                 }
             }
 
-            OrderDetail::insert($detailRows);
+            DetailPesanan::insert($detailRows);
         }
 
         // ============================================================

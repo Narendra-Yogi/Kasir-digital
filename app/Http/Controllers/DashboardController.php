@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
-use App\Models\OrderDetail;
+use App\Models\DetailPesanan;
 use App\Models\Pengeluaran;
+use App\Models\Pesanan;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -15,19 +15,19 @@ class DashboardController extends Controller
         $hariIni = Carbon::today();
         $kemarin = Carbon::yesterday();
 
-        // --- 1. Statistik Hari Ini (Menggunakan scope query bahasa Indonesia dari Model Order) ---
+        // --- 1. Statistik Hari Ini (Menggunakan scope query bahasa Indonesia dari Model Pesanan) ---
         // Menghitung jumlah transaksi sukses hari ini
-        $totalPesananHariIni = Order::perTanggal($hariIni)->sukses()->count();
+        $totalPesananHariIni = Pesanan::perTanggal($hariIni)->sukses()->count();
         // Menghitung total omzet (jumlah pendapatan) dari transaksi sukses hari ini
-        $totalPendapatanHariIni = Order::perTanggal($hariIni)->sukses()->sum('total_amount');
+        $totalPendapatanHariIni = Pesanan::perTanggal($hariIni)->sukses()->sum('total_amount');
         // Menghitung transaksi yang dibatalkan hari ini
-        $pesananDibatalkanHariIni = Order::perTanggal($hariIni)->dibatalkan()->count();
+        $pesananDibatalkanHariIni = Pesanan::perTanggal($hariIni)->dibatalkan()->count();
         // Menghitung total pengeluaran hari ini dari tabel pengeluaran
         $totalPengeluaranHariIni = Pengeluaran::whereDate('date', $hariIni)->sum('amount');
 
         // --- 2. Perbandingan dengan Hari Kemarin untuk Indikator Pertumbuhan ---
         // Menghitung omzet kemarin untuk dibandingkan dengan hari ini
-        $pendapatanKemarin = Order::perTanggal($kemarin)->sukses()->sum('total_amount');
+        $pendapatanKemarin = Pesanan::perTanggal($kemarin)->sukses()->sum('total_amount');
 
         // Rumus pertumbuhan: ((Hari ini - Kemarin) / Kemarin) * 100
         $pertumbuhanPendapatan = $pendapatanKemarin > 0
@@ -36,7 +36,7 @@ class DashboardController extends Controller
 
         // --- 3. Analitik Penjualan Mingguan: Menggunakan 1 query aggregate untuk efisiensi ---
         $awalMinggu = Carbon::today()->subDays(6);
-        $penjualanMingguanMentah = Order::sukses()
+        $penjualanMingguanMentah = Pesanan::sukses()
             ->whereBetween('created_at', [$awalMinggu->startOfDay(), Carbon::now()->endOfDay()])
             ->selectRaw('DATE(created_at) as tanggal, SUM(total_amount) as total')
             ->groupBy('tanggal')
@@ -57,7 +57,7 @@ class DashboardController extends Controller
         }
 
         // --- 4. Produk Terlaris Hari Ini (Top 5) ---
-        $produkTerlarisHariIni = OrderDetail::whereHas('order', function ($q) use ($hariIni) {
+        $produkTerlarisHariIni = DetailPesanan::whereHas('order', function ($q) use ($hariIni) {
             $q->perTanggal($hariIni)->sukses();
         })
             ->with(['item' => fn ($q) => $q->withTrashed()])
@@ -68,7 +68,7 @@ class DashboardController extends Controller
             ->get();
 
         // --- 5. Daftar Transaksi Terbaru (5 transaksi terakhir berdasarkan ID) ---
-        $transaksiTerbaru = Order::with('user')->latest('id')->take(5)->get();
+        $transaksiTerbaru = Pesanan::with('user')->latest('id')->take(5)->get();
 
         // Mengirimkan semua data yang sudah diproses ke halaman view dashboard
         return view('dashboard', compact(

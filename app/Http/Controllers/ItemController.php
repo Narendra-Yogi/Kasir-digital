@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
-use App\Models\Item;
+use App\Models\Kategori;
+use App\Models\Menu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -12,14 +12,14 @@ class ItemController extends Controller
 {
     public function index()
     {
-        $items = Item::with('category')->latest()->get();
+        $items = Menu::with('category')->latest()->get();
 
         return view('items.index', compact('items'));
     }
 
     public function create()
     {
-        $categories = Category::all();
+        $categories = Kategori::all();
 
         return view('items.create', compact('categories'));
     }
@@ -49,7 +49,7 @@ class ItemController extends Controller
         }
 
         // Menyimpan menu baru ke database
-        $item = Item::create([
+        $item = Menu::create([
             'category_id' => $request->category_id,
             'name' => $request->name,
             'price' => $request->price,
@@ -64,14 +64,14 @@ class ItemController extends Controller
         return redirect()->route('items.index')->with('success', 'Menu baru berhasil ditambahkan.');
     }
 
-    public function edit(Item $item)
+    public function edit(Menu $item)
     {
-        $categories = Category::all();
+        $categories = Kategori::all();
 
         return view('items.edit', compact('item', 'categories'));
     }
 
-    public function update(Request $request, Item $item)
+    public function update(Request $request, Menu $item)
     {
         // Bersihkan tanda titik ribuan dari input harga sebelum divalidasi
         $request->merge([
@@ -116,7 +116,7 @@ class ItemController extends Controller
         return redirect()->route('items.index')->with('success', 'Menu berhasil diperbarui.');
     }
 
-    public function destroy(Item $item)
+    public function destroy(Menu $item)
     {
         // Melakukan penghapusan secara Soft Delete
         $item->delete();

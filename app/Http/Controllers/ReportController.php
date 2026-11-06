@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Item;
-use App\Models\Order;
-use App\Models\OrderDetail;
+use App\Models\DetailPesanan;
+use App\Models\Menu;
 use App\Models\Pengeluaran;
+use App\Models\Pesanan;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -23,14 +23,14 @@ class ReportController extends Controller
     {
         [$tanggalMulai, $tanggalSelesai] = $this->uraikanRentangTanggal($request, 'month');
 
-        $querySukses = Order::sukses()->antaraTanggal($tanggalMulai, $tanggalSelesai);
+        $querySukses = Pesanan::sukses()->antaraTanggal($tanggalMulai, $tanggalSelesai);
 
         $totalPendapatan = (clone $querySukses)->sum('total_amount');
         $totalTransaksi = (clone $querySukses)->count();
-        $totalDibatalkan = Order::dibatalkan()->antaraTanggal($tanggalMulai, $tanggalSelesai)->count();
+        $totalDibatalkan = Pesanan::dibatalkan()->antaraTanggal($tanggalMulai, $tanggalSelesai)->count();
         $rataRataTransaksi = $totalTransaksi > 0 ? $totalPendapatan / $totalTransaksi : 0;
 
-        $rincianMetodeBayar = Order::sukses()
+        $rincianMetodeBayar = Pesanan::sukses()
             ->antaraTanggal($tanggalMulai, $tanggalSelesai)
             ->selectRaw('payment_method, COUNT(*) as jumlah, SUM(total_amount) as total')
             ->groupBy('payment_method')
@@ -41,7 +41,7 @@ class ReportController extends Controller
 
         $produkTerlaris = $this->ambilProdukTerlaris($tanggalMulai, $tanggalSelesai, 5);
 
-        $pendapatanHarian = Order::sukses()
+        $pendapatanHarian = Pesanan::sukses()
             ->antaraTanggal($tanggalMulai, $tanggalSelesai)
             ->selectRaw('DATE(created_at) as tanggal, SUM(total_amount) as total')
             ->groupBy('tanggal')
@@ -58,7 +58,7 @@ class ReportController extends Controller
             $dataGrafikMini[] = (int) ($pendapatanHarian->has($formatTanggal) ? $pendapatanHarian[$formatTanggal]->total : 0);
         }
 
-        $pesanan = Order::with(['user', 'orderDetails.item' => function ($query) {
+        $pesanan = Pesanan::with(['user', 'orderDetails.item' => function ($query) {
             $query->withTrashed();
         }])
             ->antaraTanggal($tanggalMulai, $tanggalSelesai)
@@ -77,29 +77,29 @@ class ReportController extends Controller
     //  BATALKAN TRANSAKSI
     // ========================================================
 
-    public function cancel(Order $order)
+    public function cancel(Pesanan $order)
     {
         DB::beginTransaction();
 
-    try {
-        // FIX #8: kunci baris order agar pembatalan paralel tidak dobel-restore
-        $order = Order::whereKey($order->id)->lockForUpdate()->first();
+        try {
+            // FIX #8: kunci baris order agar pembatalan paralel tidak dobel-restore
+            $order = Pesanan::whereKey($order->id)->lockForUpdate()->first();
 
-        if (! $order || $order->status === 'cancelled') {
-            DB::rollBack();
+            if (! $order || $order->status === 'cancelled') {
+                DB::rollBack();
 
-            return back()->with('error', 'Transaksi ini sudah dibatalkan sebelumnya.');
-        }
+                return back()->with('error', 'Transaksi ini sudah dibatalkan sebelumnya.');
+            }
 
-        $detail = $order->orderDetails()->get(['item_id', 'quantity']);
+            $detail = $order->orderDetails()->get(['item_id', 'quantity']);
 
-        // Kunci baris item (pola sama seperti checkout) sebelum increment stok
-        Item::whereIn('id', $detail->pluck('item_id')->unique())->lockForUpdate()->get();
+            // Kunci baris item (pola sama seperti checkout) sebelum increment stok
+            Menu::whereIn('id', $detail->pluck('item_id')->unique())->lockForUpdate()->get();
 
-        foreach ($detail as $row) {
-            // withTrashed: item boleh sudah dihapus, stok tetap dikembalikan
-            Item::withTrashed()->whereKey($row->item_id)->increment('stock', (int) $row->quantity);
-        }
+            foreach ($detail as $row) {
+                // withTrashed: item boleh sudah dihapus, stok tetap dikembalikan
+                Menu::withTrashed()->whereKey($row->item_id)->increment('stock', (int) $row->quantity);
+            }
 
         $order->update(['status' => 'cancelled']);
 
@@ -154,7 +154,7 @@ class ReportController extends Controller
     {
         [$tanggalMulai, $tanggalSelesai] = $this->uraikanRentangTanggal($request, 'month');
 
-        $pesanan = Order::with(['user', 'orderDetails.item' => function ($query) {
+        $pesanan = Pesanan::with(['user', 'orderDetails.item' => function ($query) {
             $query->withTrashed();
         }])
             ->antaraTanggal($tanggalMulai, $tanggalSelesai)
@@ -233,7 +233,7 @@ class ReportController extends Controller
      */
     private function ambilDataRekap(Carbon $tanggalMulai, Carbon $tanggalSelesai): array
     {
-        $pesanan = Order::sukses()
+        $pesanan = Pesanan::sukses()
             ->antaraTanggal($tanggalMulai, $tanggalSelesai)
             ->selectRaw('DATE(created_at) as tanggal, SUM(total_amount) as total_pemasukan, COUNT(*) as jumlah_transaksi')
             ->groupBy('tanggal')
@@ -249,7 +249,7 @@ class ReportController extends Controller
             ->groupBy('category')
             ->pluck('total', 'category');
 
-        $metodeBayar = Order::sukses()
+        $metodeBayar = Pesanan::sukses()
             ->antaraTanggal($tanggalMulai, $tanggalSelesai)
             ->selectRaw('payment_method, COUNT(*) as jumlah, SUM(total_amount) as total')
             ->groupBy('payment_method')
@@ -314,14 +314,14 @@ class ReportController extends Controller
         $durasiHari = $tanggalMulai->diffInDays($tanggalSelesai) + 1;
         $prevSelesai = $tanggalMulai->copy()->subDay()->endOfDay();
         $prevMulai = $tanggalMulai->copy()->subDays($durasiHari)->startOfDay();
-        $prevPemasukan = Order::sukses()->antaraTanggal($prevMulai, $prevSelesai)->sum('total_amount');
+        $prevPemasukan = Pesanan::sukses()->antaraTanggal($prevMulai, $prevSelesai)->sum('total_amount');
         $prevPengeluaran = Pengeluaran::whereBetween('date', [$prevMulai->format('Y-m-d'), $prevSelesai->format('Y-m-d')])->sum('amount');
         $prevHasil = $prevPemasukan - $prevPengeluaran;
         $selisihHasil = $hasilBersih - $prevHasil;
 
         // Menu terlaris & tersepi di periode ini
         $menuTerlaris = $this->ambilProdukTerlaris($tanggalMulai, $tanggalSelesai, 5);
-        $menuTersepi = OrderDetail::whereHas('order', function ($q) use ($tanggalMulai, $tanggalSelesai) {
+        $menuTersepi = DetailPesanan::whereHas('order', function ($q) use ($tanggalMulai, $tanggalSelesai) {
             $q->sukses()->antaraTanggal($tanggalMulai, $tanggalSelesai);
         })
             ->with(['item' => fn ($q) => $q->withTrashed()])
@@ -337,7 +337,7 @@ class ReportController extends Controller
         $jumlahQris = (int) ($metodeBayar->get('qris')->jumlah ?? 0);
 
         // Peringatan stok produk menipis
-        $stokMenipis = Item::where('stock', '<', 5)->orderBy('stock')->limit(5)->get();
+        $stokMenipis = Menu::where('stock', '<', 5)->orderBy('stock')->limit(5)->get();
 
         $result = [
             'rekapData' => $rekapData,
@@ -382,14 +382,14 @@ class ReportController extends Controller
 
     private function ambilDataHarian(Carbon $tanggal): array
     {
-        $pesanan = Order::perTanggal($tanggal)->sukses()->get();
+        $pesanan = Pesanan::perTanggal($tanggal)->sukses()->get();
         $pengeluaran = Pengeluaran::whereDate('date', $tanggal)->get();
 
         $totalPenjualan = $pesanan->sum('total_amount');
         $totalPengeluaran = $pengeluaran->sum('amount');
         $hasilBersih = $totalPenjualan - $totalPengeluaran;
 
-        $rincianBarang = OrderDetail::whereHas('order', function ($q) use ($tanggal) {
+        $rincianBarang = DetailPesanan::whereHas('order', function ($q) use ($tanggal) {
             $q->perTanggal($tanggal)->sukses();
         })
             ->with(['item' => fn ($q) => $q->withTrashed()])
@@ -398,7 +398,7 @@ class ReportController extends Controller
             ->orderByDesc('total_amount')
             ->get();
 
-        $rincianKasir = Order::perTanggal($tanggal)->sukses()
+        $rincianKasir = Pesanan::perTanggal($tanggal)->sukses()
             ->with('user')
             ->selectRaw('user_id, COUNT(*) as total_transactions, SUM(total_amount) as total_amount')
             ->groupBy('user_id')
@@ -407,10 +407,10 @@ class ReportController extends Controller
 
         $pengeluaranPerKategori = $pengeluaran->groupBy('category')->map(fn ($rows) => $rows->sum('amount'));
 
-        $stokMenipis = Item::where('stock', '<', 5)->orderBy('stock')->limit(5)->get();
+        $stokMenipis = Menu::where('stock', '<', 5)->orderBy('stock')->limit(5)->get();
 
         $kemarin = $tanggal->copy()->subDay();
-        $penjualanKemarin = Order::perTanggal($kemarin)->sukses()->sum('total_amount');
+        $penjualanKemarin = Pesanan::perTanggal($kemarin)->sukses()->sum('total_amount');
 
         $pertumbuhanPenjualan = $penjualanKemarin > 0
             ? round((($totalPenjualan - $penjualanKemarin) / $penjualanKemarin) * 100, 1)
@@ -440,7 +440,7 @@ class ReportController extends Controller
 
     private function ambilProdukTerlaris(Carbon $tanggalMulai, Carbon $tanggalSelesai, int $limit = 5)
     {
-        return OrderDetail::whereHas('order', function ($q) use ($tanggalMulai, $tanggalSelesai) {
+        return DetailPesanan::whereHas('order', function ($q) use ($tanggalMulai, $tanggalSelesai) {
             $q->sukses()->antaraTanggal($tanggalMulai, $tanggalSelesai);
         })
             ->with(['item' => fn ($q) => $q->withTrashed()])

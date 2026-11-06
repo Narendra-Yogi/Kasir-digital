@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Models\Pengguna;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -101,7 +101,7 @@ class AuthController extends Controller
             }
             RateLimiter::hit($throttleKey, 300); // jeda 5 menit per percobaan
 
-            $user = User::where('username', $request->username)->first();
+            $user = Pengguna::where('username', $request->username)->first();
 
             if (! $user || ! $user->security_question || ! $user->security_answer) {
                 return response()->json([
@@ -143,7 +143,7 @@ class AuthController extends Controller
                 ], 429);
             }
 
-            $user = User::where('username', $username)->first();
+            $user = Pengguna::where('username', $username)->first();
             if (! $user) {
                 return response()->json([
                     'success' => false,
@@ -203,7 +203,7 @@ class AuthController extends Controller
             return back()->withErrors(['reset_token' => 'Token reset telah kedaluwarsa. Silakan ulangi proses dari awal.']);
         }
 
-        $user = User::where('username', $username)->first();
+        $user = Pengguna::where('username', $username)->first();
         if (! $user) {
             return back()->withErrors(['reset_token' => 'User tidak ditemukan.']);
         }

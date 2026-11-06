@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\BukuKasHarian;
-use App\Models\Order;
 use App\Models\Pengeluaran;
+use App\Models\Pesanan;
 use Illuminate\Http\Request;
 
 class BukuKasHarianController extends Controller
@@ -28,13 +28,13 @@ class BukuKasHarianController extends Controller
 
         if (! $alreadyClosed) {
             // Jumlah Penjualan Tunai Sukses Hari Ini
-            $systemCashSales = Order::whereDate('created_at', $today)
+            $systemCashSales = Pesanan::whereDate('created_at', $today)
                 ->where('status', 'success')
                 ->where('payment_method', 'cash')
                 ->sum('total_amount');
 
             // Jumlah Penjualan QRIS Sukses Hari Ini
-            $systemQrisSales = Order::whereDate('created_at', $today)
+            $systemQrisSales = Pesanan::whereDate('created_at', $today)
                 ->where('status', 'success')
                 ->where('payment_method', 'qris')
                 ->sum('total_amount');
@@ -80,12 +80,12 @@ class BukuKasHarianController extends Controller
         ]);
 
         // Rekalkulasi data keuangan sistem untuk memvalidasi input di server
-        $systemCashSales = Order::whereDate('created_at', $today)
+        $systemCashSales = Pesanan::whereDate('created_at', $today)
             ->where('status', 'success')
             ->where('payment_method', 'cash')
             ->sum('total_amount');
 
-        $systemQrisSales = Order::whereDate('created_at', $today)
+        $systemQrisSales = Pesanan::whereDate('created_at', $today)
             ->where('status', 'success')
             ->where('payment_method', 'qris')
             ->sum('total_amount');

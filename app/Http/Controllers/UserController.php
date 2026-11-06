@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Models\Pengguna;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -11,7 +11,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::latest()->get();
+        $users = Pengguna::latest()->get();
 
         return view('users.index', compact('users'));
     }
@@ -32,7 +32,7 @@ class UserController extends Controller
             'security_answer' => 'required|string|max:255',
         ]);
 
-        User::create([
+        Pengguna::create([
             'name' => $request->name,
             'username' => $request->username,
             'password' => Hash::make($request->password),
@@ -44,12 +44,12 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Akun pengguna berhasil ditambahkan.');
     }
 
-    public function edit(User $user)
+    public function edit(Pengguna $user)
     {
         return view('users.edit', compact('user'));
     }
 
-    public function update(Request $request, User $user)
+    public function update(Request $request, Pengguna $user)
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -83,7 +83,7 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Akun pengguna berhasil diperbarui.');
     }
 
-    public function destroy(Request $request, User $user)
+    public function destroy(Request $request, Pengguna $user)
     {
         // Cegah user menghapus akunnya sendiri yang sedang dipakai login
         if ($user->id === $request->user()->id) {
@@ -99,7 +99,7 @@ class UserController extends Controller
      * Reset password user ke password baru yang digenerate otomatis.
      * Hanya bisa diakses admin dari halaman Kelola Pengguna.
      */
-    public function resetPassword(User $user)
+    public function resetPassword(Pengguna $user)
     {
         // Generate password baru 6 karakter acak (huruf + angka)
         $newPassword = substr(str_shuffle('abcdefghjkmnpqrstuvwxyz23456789'), 0, 6);

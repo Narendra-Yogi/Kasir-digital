@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
-use App\Models\Item;
-use App\Models\Order;
-use App\Models\OrderDetail;
+use App\Models\DetailPesanan;
+use App\Models\Kategori;
+use App\Models\Menu;
+use App\Models\Pesanan;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +19,7 @@ class PosController extends Controller
     {
         // Cache query kategori selama 5 menit untuk kurangi latency ke database remote
         $categories = Cache::remember('pos_categories', 300, function () {
-            return Category::with(['items' => function ($query) {
+            return Kategori::with(['items' => function ($query) {
                 $query->where('is_available', true);
             }])->whereHas('items', function ($query) {
                 $query->where('is_available', true);
@@ -48,7 +48,7 @@ class PosController extends Controller
 
             // FIX #4: SELECT ... FOR UPDATE — mengunci baris item sampai COMMIT
             // sehingga transaksi paralel antre, stok tidak bisa over-sell.
-            $items = Item::whereIn('id', $cartItemIds)->lockForUpdate()->get()->keyBy('id');
+            $items = Menu::whereIn('id', $cartItemIds)->lockForUpdate()->get()->keyBy('id');
 
             // FIX #3: agregasi qty per item dulu. Tanpa ini, item yang sama muncul
             // di 2 baris keranjang masing-masing bisa lolos cek stok per-baris
@@ -83,7 +83,7 @@ class PosController extends Controller
 
             for ($attempt = 1; $attempt <= 5; $attempt++) {
                 try {
-                    $order = Order::create([
+                    $order = Pesanan::create([
                         'invoice_number' => 'INV-'.date('ymd').'-'.str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT),
                         'user_id' => Auth::id(),
                         'customer_name' => $request->customer_name,
@@ -124,7 +124,7 @@ class PosController extends Controller
                 $item->decrement('stock', $cartItem['quantity']);
             }
 
-            OrderDetail::insert($orderDetails);
+            DetailPesanan::insert($orderDetails);
 
             DB::commit();
 
@@ -152,7 +152,7 @@ class PosController extends Controller
 
     public function struk(int $id)
     {
-        $order = Order::with([
+        $order = Pesanan::with([
             'orderDetails.item' => fn ($query) => $query->withTrashed(),
             'user' => fn ($query) => $query->withTrashed(),
         ])->findOrFail($id);

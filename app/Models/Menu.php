@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Item extends Model
+class Menu extends Model
 {
     use SoftDeletes;
 
@@ -34,6 +34,7 @@ class Item extends Model
 
     public function category(): BelongsTo
     {
-        return $this->belongsTo(Category::class, 'category_id');
+        return $this->belongsTo(Kategori::class, 'category_id');
     }
 }
+

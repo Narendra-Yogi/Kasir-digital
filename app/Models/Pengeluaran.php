@@ -39,10 +39,10 @@ class Pengeluaran extends Model
     }
 
     /**
-     * Relasi ke model User (Siapa yang mencatat pengeluaran)
+     * Relasi ke model Pengguna (Siapa yang mencatat pengeluaran)
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(Pengguna::class, 'created_by');
     }
 }

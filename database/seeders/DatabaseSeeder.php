@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
-use App\Models\Category;
-use App\Models\Item;
-use App\Models\Order;
-use App\Models\OrderDetail;
+use App\Models\DetailPesanan;
+use App\Models\Kategori;
+use App\Models\Menu;
 use App\Models\Pengeluaran;
-use App\Models\User;
+use App\Models\Pengguna;
+use App\Models\Pesanan;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Cache;
@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
         // ============================================================
         // 1. USER
         // ============================================================
-        $admin = User::firstOrCreate(
+        $admin = Pengguna::firstOrCreate(
             ['username' => 'admin'],
             [
                 'name' => 'Narendra Yogi',
@@ -31,7 +31,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $kasir1 = User::firstOrCreate(
+        $kasir1 = Pengguna::firstOrCreate(
             ['username' => 'kasir1'],
             [
                 'name' => 'Kasir Depan',
@@ -45,17 +45,17 @@ class DatabaseSeeder extends Seeder
         // ============================================================
         // 2. KATEGORI
         // ============================================================
-        $kategoriPaket = Category::firstOrCreate(['name' => 'Paket Geprek']);
-        $kategoriAlaCarte = Category::firstOrCreate(['name' => 'Ala Carte']);
-        $kategoriMinuman = Category::firstOrCreate(['name' => 'Minuman']);
-        $kategoriTopping = Category::firstOrCreate(['name' => 'Topping']);
+        $kategoriPaket = Kategori::firstOrCreate(['name' => 'Paket Geprek']);
+        $kategoriAlaCarte = Kategori::firstOrCreate(['name' => 'Ala Carte']);
+        $kategoriMinuman = Kategori::firstOrCreate(['name' => 'Minuman']);
+        $kategoriTopping = Kategori::firstOrCreate(['name' => 'Topping']);
 
         // ============================================================
         // 3. MENU ITEMS
         // ============================================================
         $items = [
             // [0] Paket Geprek Dada + Nasi
-            Item::firstOrCreate(
+            Menu::firstOrCreate(
                 ['name' => 'Paket Geprek Dada + Nasi'],
                 [
                     'category_id' => $kategoriPaket->id,
@@ -66,7 +66,7 @@ class DatabaseSeeder extends Seeder
                 ]
             ),
             // [1] Paket Geprek Paha + Nasi
-            Item::firstOrCreate(
+            Menu::firstOrCreate(
                 ['name' => 'Paket Geprek Paha + Nasi'],
                 [
                     'category_id' => $kategoriPaket->id,
@@ -77,7 +77,7 @@ class DatabaseSeeder extends Seeder
                 ]
             ),
             // [2] Paket Geprek 2 Paha + Nasi
-            Item::firstOrCreate(
+            Menu::firstOrCreate(
                 ['name' => 'Paket Geprek 2 Paha + Nasi'],
                 [
                     'category_id' => $kategoriPaket->id,
@@ -88,7 +88,7 @@ class DatabaseSeeder extends Seeder
                 ]
             ),
             // [3] Ayam Geprek Dada (Tanpa Nasi)
-            Item::firstOrCreate(
+            Menu::firstOrCreate(
                 ['name' => 'Ayam Geprek Dada (Tanpa Nasi)'],
                 [
                     'category_id' => $kategoriAlaCarte->id,
@@ -99,7 +99,7 @@ class DatabaseSeeder extends Seeder
                 ]
             ),
             // [4] Ayam Geprek Paha (Tanpa Nasi)
-            Item::firstOrCreate(
+            Menu::firstOrCreate(
                 ['name' => 'Ayam Geprek Paha (Tanpa Nasi)'],
                 [
                     'category_id' => $kategoriAlaCarte->id,
@@ -110,7 +110,7 @@ class DatabaseSeeder extends Seeder
                 ]
             ),
             // [5] Nasi Putih
-            Item::firstOrCreate(
+            Menu::firstOrCreate(
                 ['name' => 'Nasi Putih'],
                 [
                     'category_id' => $kategoriAlaCarte->id,
@@ -121,7 +121,7 @@ class DatabaseSeeder extends Seeder
                 ]
             ),
             // [6] Es Teh Manis
-            Item::firstOrCreate(
+            Menu::firstOrCreate(
                 ['name' => 'Es Teh Manis'],
                 [
                     'category_id' => $kategoriMinuman->id,
@@ -132,7 +132,7 @@ class DatabaseSeeder extends Seeder
                 ]
             ),
             // [7] Es Jeruk
-            Item::firstOrCreate(
+            Menu::firstOrCreate(
                 ['name' => 'Es Jeruk'],
                 [
                     'category_id' => $kategoriMinuman->id,
@@ -143,7 +143,7 @@ class DatabaseSeeder extends Seeder
                 ]
             ),
             // [8] Air Mineral
-            Item::firstOrCreate(
+            Menu::firstOrCreate(
                 ['name' => 'Air Mineral'],
                 [
                     'category_id' => $kategoriMinuman->id,
@@ -154,7 +154,7 @@ class DatabaseSeeder extends Seeder
                 ]
             ),
             // [9] Es Teh Tawar
-            Item::firstOrCreate(
+            Menu::firstOrCreate(
                 ['name' => 'Es Teh Tawar'],
                 [
                     'category_id' => $kategoriMinuman->id,
@@ -165,7 +165,7 @@ class DatabaseSeeder extends Seeder
                 ]
             ),
             // [10] Kol Goreng
-            Item::firstOrCreate(
+            Menu::firstOrCreate(
                 ['name' => 'Kol Goreng'],
                 [
                     'category_id' => $kategoriTopping->id,
@@ -176,7 +176,7 @@ class DatabaseSeeder extends Seeder
                 ]
             ),
             // [11] Tahu / Tempe
-            Item::firstOrCreate(
+            Menu::firstOrCreate(
                 ['name' => 'Tahu / Tempe'],
                 [
                     'category_id' => $kategoriTopping->id,
@@ -187,7 +187,7 @@ class DatabaseSeeder extends Seeder
                 ]
             ),
             // [12] Telur Ceplok
-            Item::firstOrCreate(
+            Menu::firstOrCreate(
                 ['name' => 'Telur Ceplok'],
                 [
                     'category_id' => $kategoriTopping->id,
@@ -268,7 +268,7 @@ class DatabaseSeeder extends Seeder
                 // Sekitar 5% transaksi dibatalkan
                 $status = rand(1, 20) === 1 ? 'cancelled' : 'success';
 
-                $order = Order::create([
+                $order = Pesanan::create([
                     'invoice_number' => 'INV-' . $tanggal->format('ymd') . '-' . str_pad($invoiceCounter, 4, '0', STR_PAD_LEFT),
                     'user_id' => $kasirHariIni->id,
                     'customer_name' => rand(0, 1) ? $this->namaAcak() : null,
@@ -283,7 +283,7 @@ class DatabaseSeeder extends Seeder
 
                 // Order details
                 foreach ($skenario as [$menuItem, $qty]) {
-                    OrderDetail::create([
+                    DetailPesanan::create([
                         'order_id' => $order->id,
                         'item_id' => $menuItem->id,
                         'quantity' => $qty,

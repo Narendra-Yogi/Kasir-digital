@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Category extends Model
+class Kategori extends Model
 {
     use SoftDeletes;
 
@@ -20,6 +20,7 @@ class Category extends Model
 
     public function items(): HasMany
     {
-        return $this->hasMany(Item::class, 'category_id');
+        return $this->hasMany(Menu::class, 'category_id');
     }
 }
+
